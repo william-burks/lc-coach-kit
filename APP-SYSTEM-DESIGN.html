@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LC Coach Companion — System Design (MVP)</title>
+<style>
+  :root {
+    --ink:#1a2430; --muted:#5c6b7a; --line:#e2e8f0; --accent:#1f6feb; --accent2:#0a7d52;
+    --bg:#f7f9fc; --card:#ffffff; --warn-bg:#fff7e6; --warn-br:#e0a800; --code-bg:#f1f5f9;
+  }
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif; color:var(--ink);
+         line-height:1.6; max-width:860px; margin:0 auto; padding:32px 20px 80px; background:var(--bg); }
+  h1 { font-size:27px; margin:0 0 4px; letter-spacing:-0.01em; }
+  .sub { color:var(--muted); font-size:15px; margin:0 0 22px; }
+  h2 { font-size:15px; text-transform:uppercase; letter-spacing:0.07em; color:var(--accent);
+       border-bottom:2px solid var(--accent); padding-bottom:5px; margin:34px 0 14px; }
+  h3 { font-size:16px; margin:20px 0 8px; }
+  p { margin:10px 0; }
+  code { background:var(--code-bg); padding:1.5px 6px; border-radius:4px; font-size:13.5px;
+         font-family:"SF Mono",Menlo,Consolas,monospace; }
+  pre.block { background:#0f1722; color:#d6e2f0; padding:14px 16px; border-radius:9px; overflow-x:auto;
+        font-family:"SF Mono",Menlo,Consolas,monospace; font-size:13px; line-height:1.55; }
+  pre.block .c { color:#7f93a8; }
+  table { border-collapse:collapse; width:100%; margin:12px 0; font-size:14px; }
+  th,td { border:1px solid var(--line); padding:8px 11px; text-align:left; vertical-align:top; }
+  th { background:#eef3fb; font-weight:600; }
+  .callout { border-radius:9px; padding:13px 17px; margin:16px 0; font-size:14.5px; }
+  .callout.warn { background:var(--warn-bg); border-left:4px solid var(--warn-br); }
+  .callout.note { background:#eaf2ff; border-left:4px solid var(--accent); }
+  .pill { display:inline-block; font-size:11px; font-weight:700; color:#fff; background:var(--accent);
+          padding:2px 9px; border-radius:11px; vertical-align:middle; margin-left:6px; }
+  ul { margin:10px 0; padding-left:22px; } li { margin:4px 0; }
+  .no { color:#a3000e; } .yes { color:var(--accent2); }
+  .mermaid { background:var(--card); border:1px solid var(--line); border-radius:11px; padding:18px;
+             margin:16px 0; text-align:center; }
+  .foot { color:var(--muted); font-size:12.5px; margin-top:34px; border-top:1px solid var(--line); padding-top:12px; }
+  .term { background:#0f1722; border-radius:9px; margin:14px 0; overflow:hidden; border:1px solid #233040; }
+  .term-bar { background:#1c2735; padding:6px 12px; font-size:12px; color:#7f93a8; border-bottom:1px solid #233040; }
+  .term-bar .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px; vertical-align:middle; }
+  .term-body { padding:13px 16px; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:12.5px;
+               line-height:1.6; color:#d6e2f0; white-space:pre; overflow-x:auto; }
+  .term-body .prompt { color:#7ee787; } .term-body .cmt { color:#7f93a8; } .term-body .flag { color:#f0a020; }
+  .term-body .ok { color:#7ee787; } .term-body .hdr { color:#79c0ff; }
+  .script { background:var(--card); border:1px solid var(--line); border-radius:9px; padding:13px 16px; margin:12px 0; font-size:14px; }
+  .script .turn { margin:7px 0; }
+  .script .who { font-weight:700; } .script .coach { color:var(--accent); } .script .you { color:var(--accent2); }
+  .script .stage { color:var(--muted); font-style:italic; }
+</style>
+</head>
+<body>
+
+<h1>LC Coach Companion — System Design <span class="pill">MVP</span></h1>
+<p class="sub">A small, local, file-system-aware AI tool that plays the <strong>second AI</strong> in the LC Coach Kit workflow — habit-aware code review + session logging — so users get the "Claude Code" half of the loop without setting up Claude Code.</p>
+
+<div class="callout warn">
+  <strong>Scope discipline (read first):</strong> this is a <em>contained weekend build</em>, not a platform. It's a <strong>build</strong> (comfort bucket) — <strong>not</strong> on the C++ critical path. Ship a small MVP after the floor's done, time-boxed, then stop. The non-goals are load-bearing.
+</div>
+
+<h2>1 · Purpose</h2>
+<table>
+  <tr><th>Problem</th><th>This tool</th></tr>
+  <tr><td>Users would need to set up Claude Code (CLI, keys, config) for the file-aware second opinion + logging</td><td>One tiny local tool, scoped to <em>only</em> their LC files</td></tr>
+  <tr><td>The voice coach (Claude app) can't write to local log files</td><td>This can — append to the queue, tick the tracker, add a weak-area tag</td></tr>
+  <tr><td>You want a clean, shippable artifact in the agentic / LLM-dev-tooling lane</td><td>This <em>is</em> one: a scoped file-aware agent that reviews code against tracked context and writes structured logs</td></tr>
+</table>
+
+<h2>2 · Scope &amp; Non-Goals</h2>
+<p><strong>In scope (MVP):</strong></p>
+<ul>
+  <li>Local Python CLI, <strong>bring-your-own <code>ANTHROPIC_API_KEY</code></strong></li>
+  <li>Operates on a single configured folder (a clone of <code>lc-coach-kit</code>)</li>
+  <li>Three commands: <code>review</code>, <code>log</code>, <code>status</code></li>
+</ul>
+<p><strong>Explicit non-goals — do NOT build in MVP:</strong></p>
+<ul>
+  <li><span class="no">✗</span> Hosting / multi-user / accounts / auth</li>
+  <li><span class="no">✗</span> A database (the markdown files <em>are</em> the store)</li>
+  <li><span class="no">✗</span> A web UI or desktop app (CLI only — web wrapper is a maybe-v2)</li>
+  <li><span class="no">✗</span> Doing the voice coaching (that stays in the Claude app)</li>
+  <li><span class="no">✗</span> Touching any file outside the configured LC folder</li>
+</ul>
+
+<h2>3 · Architecture</h2>
+<pre class="mermaid">
+flowchart TB
+    User([You])
+    Claude[[Anthropic Claude API]]
+
+    subgraph APP["lc-coach companion · local Python CLI · BYO API key"]
+        Cmd{lc command}
+        Review["review handler"]
+        Log["log handler"]
+        Status["status handler"]
+        Arm["arm handler"]
+        Setup["setup handler"]
+        Gap["gap handler"]
+        FS["file store<br/>(scoped to the LC folder)"]
+        LLM["Claude client"]
+    end
+
+    subgraph KIT["LC kit files · the ONLY files it touches"]
+        WA["weak-areas.md"]
+        SRQ["spaced-rep-queue.md"]
+        PT["problem-tracker.md"]
+        HB["habits.md"]
+    end
+
+    User -->|paste code| Cmd
+    User -->|paste session report| Cmd
+    Cmd --> Review
+    Cmd --> Log
+    Cmd --> Status
+    Cmd --> Arm
+    Cmd --> Setup
+    Cmd --> Gap
+
+    Review -->|code + weak-areas as context| LLM
+    Log -->|report + current logs| LLM
+    Status --> FS
+    Arm -->|reads problem history + weak-areas| FS
+    Arm -->|session pack to upload| User
+    Setup -->|writes config| FS
+    Gap -->|reads all logs| FS
+    Gap -->|trend analysis| LLM
+    LLM <-->|API call| Claude
+
+    Review -->|prints habit-aware review| User
+    Log -->|structured updates| FS
+    FS <-->|read / append| KIT
+</pre>
+
+<h2>4 · Components</h2>
+<table>
+  <tr><th>Component</th><th>Responsibility</th><th>Notes</th></tr>
+  <tr><td><strong>CLI entry</strong></td><td>Parse command + read pasted input (stdin or <code>--file</code>)</td><td><code>argparse</code> / stdlib only</td></tr>
+  <tr><td><strong>Config</strong></td><td>Locate LC folder (<code>LC_DIR</code> env / <code>--dir</code>, default <code>.</code>); read <code>ANTHROPIC_API_KEY</code></td><td>Fail fast w/ clear message if missing</td></tr>
+  <tr><td><strong>File store</strong></td><td>Read kit files for context; write updates back. <strong>Hard-scoped to the LC folder</strong> — refuses paths outside it</td><td>The only thing touching disk</td></tr>
+  <tr><td><strong>Claude client</strong></td><td>One wrapper around the Anthropic SDK; system prompt + relevant files as context</td><td>Current Claude model</td></tr>
+  <tr><td><strong>Review handler</strong></td><td>code (+ optional problem) + <code>weak-areas.md</code> → habit-aware review. <strong>Prints only — writes nothing.</strong></td><td>The "second opinion"</td></tr>
+  <tr><td><strong>Log handler</strong></td><td>session report + current logs → structured updates → file store</td><td>The "logger"</td></tr>
+  <tr><td><strong>Status handler</strong></td><td>Read logs → print spaced-rep due today + flagged weak areas</td><td>Quick daily check</td></tr>
+  <tr><td><strong>Arm handler</strong></td><td>Bundle brief + problem statement + that problem's prior attempts + weak-spots → a session pack to upload to the voice coach</td><td>Enables verbal INTERVIEW delivery; mostly file assembly (no LLM call needed)</td></tr>
+  <tr><td><strong>Setup handler</strong></td><td>Capture name + language (or pair) → write the config the other commands read</td><td>One-time; tailors the standards gate + review to the language</td></tr>
+  <tr><td><strong>Gap handler</strong></td><td>Read all logs → LLM trend analysis → aggregate gaps + next-week focus → append to <code>gap-analysis-log.md</code></td><td>The weekly aggregate review</td></tr>
+</table>
+
+<h2>5 · Commands (UX)</h2>
+<pre class="block"><span class="c"># one-time SETUP — pick your language(s) + name</span>
+lc setup
+   <span class="c"># prompts: name (optional) · primary language · optional 2nd (diagnostic) language</span>
+   <span class="c"># writes config the other commands read; tailors the standards gate + review</span>
+
+<span class="c"># ARM the voice coach with a problem → outputs a "session pack" to upload</span>
+lc arm "11 Container With Most Water"
+   --mode INTERVIEW           <span class="c"># coach delivers it verbally; you stay blind</span>
+   <span class="c"># session pack = coaching brief + the problem statement</span>
+   <span class="c">#   + your prior attempts on it + your flagged weak-spots</span>
+   <span class="c"># upload THAT to the Claude voice session (not the bare brief)</span>
+
+<span class="c"># TIMER — auto-started by `arm`, auto-stopped by `log` (explicit control if needed)</span>
+lc start                      <span class="c"># start the session timer (start time + problem)</span>
+lc stop                       <span class="c"># stop → elapsed feeds "time vs 50-min cap"</span>
+
+<span class="c"># paste code; prints a habit-aware review (uses weak-areas.md)</span>
+lc review
+   --problem "1 Two Sum"      <span class="c"># optional, sharpens the review</span>
+   --file solution.cpp        <span class="c"># alternative to pasting</span>
+
+<span class="c"># paste your session report; updates the log files</span>
+lc log                        <span class="c"># → appends spaced-rep-queue, ticks tracker,</span>
+                              <span class="c">#   updates weak-areas tag, appends habits row</span>
+
+<span class="c"># prints spaced-rep items due today/overdue + flagged weak areas</span>
+lc status
+
+<span class="c"># GAP ANALYSIS — review accumulated logs, find trends, prescribe next focus</span>
+lc gap
+   <span class="c"># reads weak-areas + spaced-rep history + habits across sessions</span>
+   <span class="c"># prints aggregate gaps (3+ repeats, trending-wrong) + next-week adjustment</span>
+   <span class="c"># appends to gap-analysis-log.md</span></pre>
+<p>Input by paste (stdin, Ctrl-D to end) or <code>--file</code>. Output to terminal; <code>log</code> also writes files and prints a diff of what changed.</p>
+
+<div class="callout note"><strong>Arming the coach — the feature that makes INTERVIEW mode work.</strong> The voice coach needs the <em>problem statement</em> to deliver it verbally while you stay blind — the bare brief can't do that. <code>lc arm "&lt;problem&gt;"</code> builds a <strong>session pack</strong> = the coaching brief + the problem statement + <em>your prior attempts on this exact problem</em> + your flagged weak-spots. You upload the pack (not the generic brief), so the coach is now <strong>problem-aware and history-aware</strong>: it can read the problem to you aloud for the INTERVIEW protocol, and it already knows you failed this one on attempt 3 with a dedup bug and watches for it. <strong>Two problem sources, both clean:</strong> the coach can <strong>assume the problem itself</strong> (recall or pose one by name/pattern — great for quick, varied practice, though it may paraphrase from memory), or you <strong>paste the exact problem</strong> (<em>recommended</em> — full fidelity, no hallucination). No scraping, no bundled bank required. The tool supports both.</div>
+
+<div class="callout note"><strong>Setup — language pair + name.</strong> <code>lc setup</code> captures your <strong>name</strong> (optional, for personalization) and your <strong>language</strong> — or a <strong>language pair</strong>: a primary (what you code in) + an optional <em>diagnostic</em> second language. The pair powers the cross-syntax check: if your algorithm transfers <em>cleanly</em> to the second language (e.g. Python), the gap was language-structural, not conceptual — so you drill the syntax, not the algorithm. Setup writes a small config that tailors the standards gate (the includes/idioms to watch) and the review to your language.</div>
+
+<div class="callout note"><strong>Gap analysis — the aggregate review.</strong> Per-session tagging (in <code>weak-areas.md</code>) catches single mistakes; <code>lc gap</code> steps back and reads <em>across</em> sessions — spaced-rep history + weak-area tags + habits — to surface <strong>trends</strong>: what's repeating 3+ times, what's trending the wrong way, and the one focus to add next week. It appends a dated entry to <code>gap-analysis-log.md</code>. Run it weekly (the "Sunday review").</div>
+
+<div class="callout note"><strong>Session timing — automatic.</strong> The CLI times your solve natively off the <strong>system clock — no hook needed</strong> (a time-injection hook only matters for giving a <em>conversational</em> AI time-awareness; a CLI process reads the clock directly). <code>lc arm</code> auto-starts the timer, <code>lc log</code> auto-stops it, and the elapsed drops into the report's <em>"time vs 50-min cap"</em> — measured, not eyeballed. Explicit <code>lc start</code>/<code>lc stop</code> are there if you want to pause or control it.</div>
+
+<div class="callout warn"><strong>No embedded problem bank.</strong> The kit ships the problem <em>list</em> (titles/numbers in <code>problem-tracker.md</code>) but <strong>not the problem statements</strong> — those are LeetCode's copyrighted content and can't be bundled or scraped. when you want a <em>specific</em> problem, <code>arm</code> takes the text you provide: paste it at arm-time, or keep your own personal <code>problems/&lt;id&gt;.md</code> files (your copy, for your use — never committed to the public repo). The <code>problems/</code> folder ships empty, a convention you fill yourself. (Or just let the coach pose one itself — see above.)</div>
+
+<h2>5b · User Journey (end to end)</h2>
+<p>One user, one problem, start to finish — across the two AIs and the files.</p>
+
+<pre class="mermaid">
+sequenceDiagram
+    actor M as You
+    participant V as Voice Coach (Claude app)
+    participant C as Companion CLI (lc)
+    participant F as Kit files
+    Note over M,F: one-time setup — clone kit, set API key, fill weak-spots
+    M->>C: lc status
+    C->>F: read queue + weak-areas
+    C-->>M: "due today: 11 Container (INTERVIEW)"
+    M->>C: lc arm "11 Container" --mode INTERVIEW
+    C->>F: read problem history + weak-areas
+    C-->>M: session pack (brief + problem + history + weak-spots)
+    M->>V: upload pack, go voice
+    V-->>M: reads problem aloud (INTERVIEW), coaches — you stay blind
+    loop revise until clean or time's up
+        M->>M: write / revise code
+        M->>V: paste code
+        V-->>M: review (has your spoken reasoning)
+        M->>C: lc review (paste code)
+        C->>F: read weak-areas
+        C-->>M: habit-aware 2nd opinion
+    end
+    M->>V: debrief, generate session report
+    M->>C: lc log (paste report)
+    C->>F: append queue / tick tracker / update weak-areas + habits
+    C-->>M: shows diff, "Logged"
+</pre>
+
+<h3>The steps</h3>
+<table>
+<tr><th>#</th><th>Step</th><th>Where</th><th>What the user gets</th></tr>
+<tr><td>0</td><td>One-time: clone, API key, <code>lc setup</code> (name + language/pair)</td><td>Companion CLI</td><td>Config tailored to their language</td></tr>
+<tr><td>1</td><td><code>lc status</code> — what's due</td><td>Companion CLI</td><td>Today's spaced-rep + flagged weak areas</td></tr>
+<tr><td>2</td><td><code>lc arm "&lt;problem&gt;"</code> → upload the session pack → voice</td><td>CLI → Claude app</td><td>A coach <em>armed</em> with the problem + their history on it</td></tr>
+<tr><td>3</td><td>Talk through the solve; write the code</td><td>Voice + editor</td><td>Reasoning out loud (the real skill)</td></tr>
+<tr><td>4</td><td>Paste code to the voice coach</td><td>Claude app</td><td>Review <em>with</em> their reasoning context</td></tr>
+<tr><td>5</td><td><code>lc review</code></td><td>Companion CLI</td><td>Habit-aware 2nd opinion vs tracked weak-spots</td></tr>
+<tr><td>6</td><td>Debrief → generate session report</td><td>Voice</td><td>Honest grade + mantras + next-rep date</td></tr>
+<tr><td>7</td><td><code>lc log</code></td><td>Companion CLI</td><td>Logs auto-updated; nothing to hand-maintain</td></tr>
+<tr><td>8</td><td><em>Weekly:</em> <code>lc gap</code></td><td>Companion CLI</td><td>Aggregate gaps across sessions + the one focus for next week</td></tr>
+</table>
+
+<p><em>Steps 3–5 are a <strong>loop</strong> — when you're struggling, revise and re-run the review (voice + <code>lc review</code>) as many times as needed. The review isn't bound to a single pass; it's an iterate-until-clean cycle.</em></p>
+
+<h3>What the CLI touchpoints look like</h3>
+
+<div class="term">
+  <div class="term-bar"><span class="dot" style="background:#ff5f56"></span><span class="dot" style="background:#ffbd2e"></span><span class="dot" style="background:#27c93f"></span> &nbsp;lc status</div>
+  <div class="term-body"><span class="prompt">$</span> lc status
+<span class="hdr">LC Coach — status</span> (./lc-coach-kit)
+
+Spaced-rep due:
+  • 11 Container With Most Water   <span class="flag">due today</span>    (INTERVIEW)
+  • 1  Two Sum                     <span class="flag">overdue 2d</span>   (INTERVIEW)
+
+Flagged weak areas (3+ strikes):
+  <span class="flag">⚑</span> two-pointers   — pointer-movement direction
+  <span class="flag">⚑</span> jump-to-code   — whiteboard before coding
+
+3 problems solved this week.</div>
+</div>
+
+<div class="term">
+  <div class="term-bar"><span class="dot" style="background:#ff5f56"></span><span class="dot" style="background:#ffbd2e"></span><span class="dot" style="background:#27c93f"></span> &nbsp;lc review</div>
+  <div class="term-body"><span class="prompt">$</span> lc review --problem <span class="cmt">"11 Container With Most Water"</span>
+<span class="cmt">Paste your code, then Ctrl-D:</span>
+<span class="cmt">[ ...your C++... ]</span>
+
+<span class="hdr">── Habit-aware review ──────────────────────────</span>
+<span class="ok">✓</span> Two-pointer structure correct; moves the shorter wall.
+<span class="flag">⚑ WEAK-SPOT (two-pointers):</span> you moved the TALLER wall on
+  line 9 — that's your recurring direction bug.
+<span class="flag">⚑</span> Missing <span class="cmt">#include &lt;algorithm&gt;</span> for std::max (recurring).
+•  Complexity: O(N) time, O(1) aux — clean.
+
+Verdict: <span class="flag">with-assist</span> (direction bug surfaced, not self-caught).</div>
+</div>
+
+<div class="term">
+  <div class="term-bar"><span class="dot" style="background:#ff5f56"></span><span class="dot" style="background:#ffbd2e"></span><span class="dot" style="background:#27c93f"></span> &nbsp;lc log</div>
+  <div class="term-body"><span class="prompt">$</span> lc log
+<span class="cmt">Paste your session report, then Ctrl-D:</span>
+<span class="cmt">[ ...report... ]</span>
+
+<span class="hdr">── Proposed log updates ────────────────────────</span>
+spaced-rep-queue.md:
+  <span class="ok">+</span> | 11 Container | +14d | with-assist (~12m)
+problem-tracker.md:
+  ~ [ ] 11 Container  →  stays unchecked (not clean)
+weak-areas.md:
+  ~ two-pointers: 3 → <span class="flag">4 strikes</span> (still FLAGGED)
+habits.md:
+  <span class="ok">+</span> Tue | 1 | 11 Container w-assist (effort 2)
+
+Apply these 4 changes? [y/N]: y
+<span class="ok">✓ Logged.</span></div>
+</div>
+
+<h3>The two modes in voice — TEACH vs INTERVIEW</h3>
+<p>The CLI touchpoints are identical; what changes is how the <em>voice coach</em> behaves. You set it with <code>lc arm "&lt;problem&gt;" --mode TEACH|INTERVIEW</code>.</p>
+
+<p><strong>TEACH</strong> — learning or stuck. Warm-up quiz first, problem shown, Socratic nudges toward the insight:</p>
+<div class="script">
+  <div class="turn"><span class="who coach">Coach:</span> Quick warm-up before we read it — <code>std::sort</code> is what time and space?</div>
+  <div class="turn"><span class="who you">You:</span> O(N log N) time, O(log N) auxiliary.</div>
+  <div class="turn"><span class="who coach">Coach:</span> Good. And N² + N log N dominates to…?</div>
+  <div class="turn"><span class="who you">You:</span> O(N²).</div>
+  <div class="turn"><span class="who coach">Coach:</span> Right. Problem: two-sum on a <em>sorted</em> array. State the job in plain English first.</div>
+  <div class="turn"><span class="who you">You:</span> Find two numbers that add to target… I'll use a hash map?</div>
+  <div class="turn"><span class="who coach">Coach:</span> You could — but it's <em>sorted</em>. Does that unlock something simpler?</div>
+  <div class="turn"><span class="who you">You:</span> …two pointers from both ends.</div>
+  <div class="turn"><span class="who coach">Coach:</span> There it is. Why move the <em>left</em> pointer when the sum's too small? <span class="stage">(you reason it out — coach only nudges, never tells)</span></div>
+</div>
+
+<p><strong>INTERVIEW</strong> — you know it, performing. Verbal delivery, restate cap, you stay blind, coach goes quiet:</p>
+<div class="script">
+  <div class="turn"><span class="who coach">Coach:</span> <span class="stage">[reads the problem aloud once]</span> You can ask me to restate it twice.</div>
+  <div class="turn"><span class="who you">You:</span> Restate the constraints? <span class="stage">(1 of 2 used)</span></div>
+  <div class="turn"><span class="who coach">Coach:</span> <span class="stage">[restates]</span></div>
+  <div class="turn"><span class="who you">You:</span> <span class="stage">[invents an example, traces it, writes pseudocode aloud]</span></div>
+  <div class="turn"><span class="who coach">Coach:</span> <span class="stage">(silent — lets you work)</span></div>
+  <div class="turn"><span class="who you">You:</span> Complexity is O(N)?</div>
+  <div class="turn"><span class="who coach">Coach:</span> Are you sure that handles all-duplicates? <span class="stage">(probes — doesn't fix)</span></div>
+</div>
+
+<h3>v2 idea — a friendly web wrapper <span class="pill">future</span></h3>
+<pre class="block">┌─ LC Coach ─────────────────────────────────┐
+│  [ Review ]   [ Log ]   [ Status ]          │
+├─────────────────────────────────────────────┤
+│  Problem: [ 11 Container With Most Water ▾]  │
+│  ┌───────────────────────────────────────┐  │
+│  │  paste your code here…                │  │
+│  └───────────────────────────────────────┘  │
+│                       [ Review my code ]    │
+├─────────────────────────────────────────────┤
+│  ⚑ two-pointers: moved the taller wall…     │
+│  ⚑ missing #include &lt;algorithm&gt;             │
+│  ✓ O(N) / O(1) — clean                       │
+└─────────────────────────────────────────────┘</pre>
+<p><em>Out of MVP — the CLI ships first. The web wrapper is only if you later want a non-terminal version for users.</em></p>
+
+<h2>6 · Data Flow</h2>
+<h3><code>review</code> — read-only</h3>
+<pre class="block">code + weak-areas.md  ──►  Claude  ──►  review text  ──►  printed to user</pre>
+<p>Nothing is written. The weak-areas context is what makes it <em>habit-aware</em> — it flags the mistakes this user actually repeats.</p>
+<h3><code>log</code> — read + write</h3>
+<pre class="block">session report + current log files  ──►  Claude (structured extraction)
+      ──►  proposed updates (queue row, tracker tick, weak-area tag, habit row)
+      ──►  file store appends/edits  ──►  prints what changed</pre>
+<div class="callout note"><strong>Diff before write.</strong> Claude extracts structure from the free-text report; the file store applies deterministic appends. Show the before/after so a mis-parsed report can't silently corrupt the logs.</div>
+
+<h2>7 · Data Model</h2>
+<p>No database — the <strong>markdown files are the store</strong>:</p>
+<ul>
+  <li><code>weak-areas.md</code> — tag table (read for review context; appended on log)</li>
+  <li><code>spaced-rep-queue.md</code> — active queue (appended/updated on log; read for status)</li>
+  <li><code>problem-tracker.md</code> — checkboxes (ticked on a clean solve)</li>
+  <li><code>habits.md</code> — daily rows (appended on log)</li>
+  <li><code>config.md</code> — name + language(s) from <code>setup</code> (read by all commands)</li>
+  <li><code>gap-analysis-log.md</code> — dated aggregate-review entries (appended by <code>gap</code>)</li>
+  <li><code>problems/&lt;id&gt;.md</code> — optional cached problem statements (read by <code>arm</code>)</li>
+  <li><code>.session</code> — timer state (start time + current problem; set by <code>start</code>/<code>arm</code>, cleared by <code>stop</code>/<code>log</code>)</li>
+</ul>
+
+<h2>8 · Tech Stack</h2>
+<ul>
+  <li><strong>Python 3.10+</strong>, stdlib + the <strong><code>anthropic</code></strong> SDK. That's it.</li>
+  <li>No web framework, no DB, no async. One package dependency.</li>
+  <li>Config via env vars (<code>ANTHROPIC_API_KEY</code>, optional <code>LC_DIR</code>).</li>
+</ul>
+
+<h2>9 · Setup (what a user does)</h2>
+<pre class="block">git clone &lt;your-repo&gt;/lc-coach-kit &amp;&amp; cd lc-coach-kit
+pip install anthropic
+export ANTHROPIC_API_KEY=sk-...        <span class="c"># their own key</span>
+python lc.py setup                     <span class="c"># name + language(s) → writes config</span>
+python lc.py status                    <span class="c"># verify it reads their files</span></pre>
+
+<h2>10 · Build Estimate (keep it contained)</h2>
+<table>
+  <tr><th>Piece</th><th>Rough size</th></tr>
+  <tr><td>CLI + config + file store (scoped read/write + path guard)</td><td>~120 lines</td></tr>
+  <tr><td>Claude client + 3 prompts (review, log-extract, gap)</td><td>~110 lines</td></tr>
+  <tr><td>6 command handlers (setup/arm/review/log/status/gap) + diff print</td><td>~160 lines</td></tr>
+  <tr><td><strong>Total MVP</strong></td><td><strong>~390 lines · one focused weekend</strong></td></tr>
+</table>
+<p>If it's growing past this, you're building v2 features — stop and ship the MVP.</p>
+
+<h2>11 · Guardrails</h2>
+<ul>
+  <li><strong>Path-scoped:</strong> the file store rejects any write outside the configured LC folder. Never touches the rest of the machine.</li>
+  <li><strong>Diff-before-write:</strong> <code>log</code> shows the change (and can confirm) before saving — a mis-parsed report can't corrupt the logs.</li>
+  <li><strong>Read-only review:</strong> <code>review</code> never writes.</li>
+  <li><strong>BYO key:</strong> no shared credentials, no hosting cost on you.</li>
+</ul>
+
+<h2>12 · Future (explicitly OUT of MVP)</h2>
+<ul>
+  <li>A one-file local <strong>web UI</strong> wrapper (friendlier than CLI for non-terminal users)</li>
+  <li>Auto-detect "due today" and nudge</li>
+  <li>A <code>coach</code> command that does the <em>voice</em> loop too (only if you ever collapse the two AIs into one)</li>
+  <li>Optional <code>--fetch</code> for <code>arm</code> — pull problem text from LeetCode's GraphQL on demand. <strong>Opt-in, never the default</strong>; the user accepts the ToS/fragility tradeoff. Doesn't bundle content.</li>
+</ul>
+<p>Park these. Ship the three commands first.</p>
+
+<p class="foot">LC Coach Companion — MVP system design. Companion to the LC Coach Kit. Build after the floor, time-boxed, then ship.</p>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+</script>
+</body>
+</html>

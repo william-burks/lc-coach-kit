@@ -1,0 +1,14 @@
+# Runtime / personal — never commit these (created when you use the kit)
+.session
+config.md
+gap-analysis-log.md
+problems/
+
+# Python (for the companion app, once built)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Env
+.env
