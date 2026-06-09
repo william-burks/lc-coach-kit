@@ -1,6 +1,6 @@
 # LC Coach Companion — System Design (MVP)
 
-A small, local, file-system-aware AI tool that plays the **second AI** in the [LC Coach Kit](README.md) workflow: a **habit-aware code review** + **session logging** into the kit's `logs/` files — so you get the "Claude Code" half of the loop without setting up Claude Code.
+A small, local CLI that handles the **second half** of the [LC Coach Kit](README.md) loop: a **habit-aware code review** + **session logging** into the kit's `logs/` files — fully automated, nothing else to wire up.
 
 > **Scope discipline (read first):** this is a *contained weekend build*, not a platform. It's a **build** — ship a small MVP, time-boxed, then stop. The non-goals are load-bearing.
 
@@ -10,9 +10,9 @@ A small, local, file-system-aware AI tool that plays the **second AI** in the [L
 
 | Problem | This tool |
 |---|---|
-| Setting up Claude Code (CLI, keys, config) just for the file-aware second opinion + logging is friction | One tiny local tool, scoped to *only* your LC files |
+| Hand-maintaining the logs and getting a code-specific second opinion is manual | One tiny local CLI automates both, scoped to *only* your LC files |
 | The voice coach (Claude app) can't write to your local log files | This can — append to the queue, tick the tracker, add a weak-area tag |
-| You want a clean, shippable artifact in the agentic / LLM-dev-tooling lane | This *is* one: a scoped file-aware agent that reviews code against tracked context and writes structured logs |
+| You want a clean, shippable artifact in the agentic / LLM-dev-tooling lane | This *is* one: a scoped local agent that reviews code against tracked context and writes structured logs |
 
 ## 2. Scope & non-goals
 
@@ -192,6 +192,19 @@ If it's growing past this, you're building v2 — stop and ship.
 - **Read-only review:** `review` never writes.
 - **BYO key:** no shared credentials, no hosting cost.
 - **No copyrighted content:** ships the problem list, never the statements; no scraping.
+
+## Safety & trust — is it safe to run?
+
+A fair question for any AI tool with file access + network calls. Why you can trust it:
+
+- **It's open source.** ~390 lines you can read end to end — no hidden behavior, no obfuscation.
+- **The AI never executes anything.** It only returns *text* (a review, or structured log data). The tool's own deterministic code does the file writes — no `eval`, no running the model's output as code or shell commands.
+- **File access is hard-scoped.** The file store refuses any path outside your LC folder. It cannot read or write the rest of your machine.
+- **Read-only review.** `review` never writes — it only prints.
+- **You approve every write.** `log` shows a diff of the proposed change (and can confirm) before saving — a bad parse can't silently corrupt your logs.
+- **You control what leaves your machine.** Only the code/report you paste + the kit files (sent as context) go to the Anthropic API, under *your own* key. No telemetry, no other network calls, no third-party servers.
+
+In short: a small, readable, local tool that talks to exactly one API (with your key), writes only inside one folder, and never runs AI output as code. You can verify every line.
 
 ## 11. Future (OUT of MVP)
 

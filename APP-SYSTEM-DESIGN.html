@@ -52,7 +52,7 @@
 <body>
 
 <h1>LC Coach Companion — System Design <span class="pill">MVP</span></h1>
-<p class="sub">A small, local, file-system-aware AI tool that plays the <strong>second AI</strong> in the LC Coach Kit workflow — habit-aware code review + session logging — so users get the "Claude Code" half of the loop without setting up Claude Code.</p>
+<p class="sub">A small, local CLI that handles the <strong>second half</strong> of the LC Coach Kit loop — habit-aware code review + session logging — fully automated, nothing else to wire up.</p>
 
 <div class="callout warn">
   <strong>Scope discipline (read first):</strong> this is a <em>contained weekend build</em>, not a platform. Ship a small MVP, time-boxed, then stop. The non-goals below are load-bearing.
@@ -61,9 +61,9 @@
 <h2>1 · Purpose</h2>
 <table>
   <tr><th>Problem</th><th>This tool</th></tr>
-  <tr><td>Users would need to set up Claude Code (CLI, keys, config) for the file-aware second opinion + logging</td><td>One tiny local tool, scoped to <em>only</em> their LC files</td></tr>
+  <tr><td>Hand-maintaining the logs and getting a code-specific second opinion is manual</td><td>One tiny local CLI automates both, scoped to <em>only</em> your LC files</td></tr>
   <tr><td>The voice coach (Claude app) can't write to local log files</td><td>This can — append to the queue, tick the tracker, add a weak-area tag</td></tr>
-  <tr><td>You want a clean, shippable artifact in the agentic / LLM-dev-tooling lane</td><td>This <em>is</em> one: a scoped file-aware agent that reviews code against tracked context and writes structured logs</td></tr>
+  <tr><td>You want a clean, shippable artifact in the agentic / LLM-dev-tooling lane</td><td>This <em>is</em> one: a scoped local agent that reviews code against tracked context and writes structured logs</td></tr>
 </table>
 
 <h2>2 · Scope &amp; Non-Goals</h2>
@@ -391,6 +391,18 @@ python lc.py status                    <span class="c"># verify it reads their f
   <li><strong>Read-only review:</strong> <code>review</code> never writes.</li>
   <li><strong>BYO key:</strong> no shared credentials, no hosting cost on you.</li>
 </ul>
+
+<h2>11b · Safety &amp; Trust — is it safe to run?</h2>
+<p>A fair question for any AI tool with file access + network calls. Why you can trust it:</p>
+<ul>
+  <li><strong>It's open source.</strong> ~390 lines you can read end to end — no hidden behavior, no obfuscation.</li>
+  <li><strong>The AI never executes anything.</strong> It only returns <em>text</em> (a review, or structured log data). The tool's own <strong>deterministic code</strong> does the file writes — no <code>eval</code>, no running the model's output as code or shell commands.</li>
+  <li><strong>File access is hard-scoped.</strong> The file store refuses any path outside your LC folder. It cannot read or write the rest of your machine.</li>
+  <li><strong>Read-only review.</strong> <code>review</code> never writes — it only prints.</li>
+  <li><strong>You approve every write.</strong> <code>log</code> shows a diff of the proposed change (and can confirm) before saving — a bad parse can't silently corrupt your logs.</li>
+  <li><strong>You control what leaves your machine.</strong> Only the code/report you paste + the kit files (sent as context) go to the Anthropic API, under <em>your own</em> key. No telemetry, no other network calls, no third-party servers.</li>
+</ul>
+<div class="callout note">In short: a small, readable, local tool that talks to exactly one API (with your key), writes only inside one folder, and never runs AI output as code. You can verify every line.</div>
 
 <h2>12 · Future (explicitly OUT of MVP)</h2>
 <ul>
