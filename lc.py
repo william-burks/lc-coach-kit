@@ -295,9 +295,23 @@ def cmd_stop(args):
     print("No active timer." if not r else f"Stopped: {r[0]} — {r[1]} min")
 
 
+def _up_next(n=5):
+    """Next n unsolved problems from the tracker (first-attempt backlog).
+    Distinct from the spaced-rep queue, which holds re-attempts of solves."""
+    items = []
+    for l in read(KIT["tracker"]).splitlines():
+        s = l.strip()
+        if s.startswith("- [ ]") and "e.g." not in s.lower():
+            items.append(s[len("- [ ]"):].strip())
+            if len(items) >= n:
+                break
+    return items
+
+
 def cmd_status(args):
     queue = read(KIT["queue"])
     weak = read(KIT["weak"])
+    cfg = get_config()
     print(f"LC Coach — status ({lc_dir().name})\n")
     due = []
     for l in queue.splitlines():
@@ -312,6 +326,13 @@ def cmd_status(args):
                     due.append(f"  • {cells[0]:<34} due {duedate}")
     print("Spaced-rep due/overdue:")
     print("\n".join(due) if due else "  (none)")
+    nxt = _up_next()
+    label = f" (from {cfg['problem set']})" if cfg.get("problem set") else ""
+    print(f"\nUp next{label}:")
+    if nxt:
+        print("\n".join(f"  • {p}" for p in nxt))
+    else:
+        print("  (none — all solved, or run `lc setup` to seed a set)")
     print("\nFlagged weak areas:")
     flags = [l for l in weak.splitlines()
              if "FLAGGED" in l.upper() and l.lstrip().startswith("|")
