@@ -155,6 +155,7 @@ No database — the **markdown files are the store**:
 - `weak-areas.md` — tag table (read for review; appended on log)
 - `spaced-rep-queue.md` — active queue (appended on log; read for status)
 - `problem-tracker.md` — checkboxes (ticked on a clean solve)
+- `mastery.md` — per-problem mastery level, computed from logged outcomes (not verbal grades); updated on log, summarized in status
 - `habits.md` — daily rows (appended on log)
 - `config.md` — name + language(s) + chosen problem set + weekly floor from `setup`
 - `sets/{neetcode150,blind75}.md` — bundled problem sets; `setup` copies the chosen one into `problem-tracker.md`

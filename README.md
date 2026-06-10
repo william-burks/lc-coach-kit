@@ -28,6 +28,7 @@ lc-coach-kit/
     ├── problem-tracker.md       ← check off problems as you clean-solve them (seeded at setup)
     ├── spaced-rep-queue.md      ← +14d / +30d re-attempt schedule
     ├── weak-areas.md            ← your recurring mistakes (the engine)
+    ├── mastery.md               ← per-problem mastery, computed from logged facts
     └── habits.md                ← optional daily tracking
 ```
 
