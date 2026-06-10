@@ -30,12 +30,12 @@ lc-coach-kit/
 
 ```bash
 pip install -r requirements.txt        # one dep: anthropic
-export ANTHROPIC_API_KEY=sk-...         # your own key
-python lc.py setup                      # name + language(s)
+export ANTHROPIC_API_KEY=sk-...         # your own key — add to ~/.zshrc to persist
+python lc.py setup                      # name + language(s) (does NOT store your key)
 python lc.py status                     # verify it reads your files
 ```
 
-The CLI reads/writes **only inside this folder** and **never runs AI output as code** — the model returns text, this code does the writes, and `lc log` shows a diff before saving. Full safety model in [`APP-SYSTEM-DESIGN.md`](APP-SYSTEM-DESIGN.md).
+Your **API key is read from the environment, never written to a file** — set it once in your shell profile (`~/.zshrc` / `~/.bashrc`). The CLI reads/writes **only inside this folder** and **never runs AI output as code** — the model returns text, this code does the writes, and `lc log` shows a diff before saving. Full safety model in [`APP-SYSTEM-DESIGN.md`](APP-SYSTEM-DESIGN.md).
 
 ## Workflow — the exact steps
 

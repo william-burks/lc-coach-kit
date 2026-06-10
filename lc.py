@@ -168,6 +168,9 @@ def cmd_setup(args):
     write(KIT["config"], "".join(lines))
     extra = f" (+ {lang2} diagnostic)" if lang2 else ""
     print(f"\nWrote {KIT['config']}. Language: {lang}{extra}")
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        print("\nYour API key is read from the environment (never stored here).")
+        print("  export ANTHROPIC_API_KEY=sk-...      # add to ~/.zshrc to persist")
 
 
 def cmd_arm(args):
