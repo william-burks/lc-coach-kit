@@ -16,6 +16,8 @@ import pathlib
 import re
 import sys
 
+EOF_HINT = "Ctrl-Z then Enter" if os.name == "nt" else "Ctrl-D"
+
 KIT = {
     "brief": "voice-coach-brief.md",
     "weak": "logs/weak-areas.md",
@@ -85,7 +87,7 @@ def read_input(args, prompt):
     """Code/report from --file, or pasted on stdin (Ctrl-D to end)."""
     if getattr(args, "file", None):
         return read(args.file)
-    print(f"{prompt} (paste, then Ctrl-D):", file=sys.stderr)
+    print(f"{prompt} (paste, then {EOF_HINT}):", file=sys.stderr)
     return sys.stdin.read()
 
 
@@ -184,7 +186,7 @@ def cmd_arm(args):
         statement = read(args.file)
         src = f"from {args.file}"
     elif args.paste:
-        print("Paste the problem statement (Ctrl-D to end):", file=sys.stderr)
+        print(f"Paste the problem statement ({EOF_HINT} to end):", file=sys.stderr)
         statement = sys.stdin.read()
         src = "pasted"
     else:

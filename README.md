@@ -19,7 +19,8 @@ lc-coach-kit/
 ├── lc.py                       ← the companion CLI (review + logging)
 ├── Makefile                    ← make install / setup / status / review / ...
 ├── requirements.txt            ← one dependency: anthropic
-├── APP-SYSTEM-DESIGN.md/.html  ← how the CLI works + its safety model
+├── MANUAL.html                 ← the full system manual (open with `make docs`)
+├── APP-SYSTEM-DESIGN.md/.html  ← deeper architecture + safety model
 └── logs/
     ├── problem-tracker.md       ← check off problems as you clean-solve them
     ├── spaced-rep-queue.md      ← +14d / +30d re-attempt schedule
@@ -29,24 +30,28 @@ lc-coach-kit/
 
 ## Prerequisites
 
-The whole list — nothing exotic (no Node, Docker, or database):
+**Python 3.10+**, **git**, and an **Anthropic API key** ([console.anthropic.com](https://console.anthropic.com)). Nothing else — no Node, Docker, or database.
 
-- **Python 3.10+** and **git**. On a fresh Mac: `brew install python git`
-- An **Anthropic API key** — from [console.anthropic.com](https://console.anthropic.com)
+| OS | Install Python + git |
+|---|---|
+| **macOS** | `brew install python git` |
+| **Linux** (Debian/Ubuntu) | `sudo apt install python3 python3-venv git make` |
+| **Linux** (Fedora) | `sudo dnf install python3 git make` |
+| **Windows** | `winget install Python.Python.3.12 Git.Git` (or python.org + git-scm.com) |
 
-## Install the `lc` CLI
+## Install — macOS / Linux
 
 ```bash
 git clone https://github.com/william-burks/lc-coach-kit.git
 cd lc-coach-kit
 python3 -m venv .venv && source .venv/bin/activate   # isolated; avoids system-pip issues
 pip install -r requirements.txt                      # one dependency: anthropic
-export ANTHROPIC_API_KEY=sk-...                       # add to ~/.zshrc to persist
+export ANTHROPIC_API_KEY=sk-...                       # add to ~/.zshrc (or ~/.bashrc) to persist
 python lc.py setup                                   # name + language(s) — does NOT store your key
 python lc.py status                                  # verify it reads your files
 ```
 
-**Or skip the venv dance with the included Makefile:**
+**Or skip the venv dance with the included Makefile** (macOS/Linux):
 
 ```bash
 make install                       # creates the venv + installs deps
@@ -55,6 +60,20 @@ make setup && make status          # then: make review / make log / make gap
 make arm P="11 Container" M=INTERVIEW
 make help                          # all targets
 ```
+
+## Install — Windows (PowerShell)
+
+```powershell
+git clone https://github.com/william-burks/lc-coach-kit.git
+cd lc-coach-kit
+python -m venv .venv; .venv\Scripts\Activate.ps1     # cmd.exe: .venv\Scripts\activate.bat
+pip install -r requirements.txt
+$env:ANTHROPIC_API_KEY = "sk-..."                    # persist: setx ANTHROPIC_API_KEY "sk-..."
+python lc.py setup
+python lc.py status
+```
+
+Windows notes: use `python` (not `python3`); end a paste with **Ctrl-Z then Enter** (not Ctrl-D); the `Makefile` needs `make` (`winget install GnuWin32.Make`) — or just run everything in **WSL**, where the macOS/Linux steps work unchanged.
 
 Your **API key is read from the environment, never written to a file** — set it once in your shell profile (`~/.zshrc` / `~/.bashrc`). The CLI reads/writes **only inside this folder** and **never runs AI output as code** — the model returns text, this code does the writes, and `lc log` shows a diff before saving. Full safety model in [`APP-SYSTEM-DESIGN.md`](APP-SYSTEM-DESIGN.md).
 

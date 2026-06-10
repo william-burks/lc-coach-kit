@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LC Coach Kit — System Manual</title>
+<style>
+  :root { --ink:#1a2430; --muted:#5c6b7a; --line:#e2e8f0; --accent:#1f6feb; --accent2:#0a7d52;
+          --bg:#f7f9fc; --card:#fff; --code-bg:#f1f5f9; --warn-bg:#fff7e6; --warn-br:#e0a800; }
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif; color:var(--ink);
+         line-height:1.6; max-width:880px; margin:0 auto; padding:32px 20px 90px; background:var(--bg); }
+  h1 { font-size:28px; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:15px; margin:0 0 8px; }
+  nav { font-size:13px; color:var(--muted); margin:14px 0 26px; line-height:2; }
+  nav a { color:var(--accent); text-decoration:none; margin-right:14px; white-space:nowrap; }
+  h2 { font-size:15px; text-transform:uppercase; letter-spacing:0.07em; color:var(--accent);
+       border-bottom:2px solid var(--accent); padding-bottom:5px; margin:38px 0 14px; }
+  h3 { font-size:16px; margin:20px 0 8px; }
+  p { margin:10px 0; }
+  code { background:var(--code-bg); padding:1.5px 6px; border-radius:4px; font-size:13.5px;
+         font-family:"SF Mono",Menlo,Consolas,monospace; }
+  pre.block { background:#0f1722; color:#d6e2f0; padding:14px 16px; border-radius:9px; overflow-x:auto;
+        font-family:"SF Mono",Menlo,Consolas,monospace; font-size:13px; line-height:1.55; }
+  pre.block .c { color:#7f93a8; }
+  table { border-collapse:collapse; width:100%; margin:12px 0; font-size:14px; }
+  th,td { border:1px solid var(--line); padding:8px 11px; text-align:left; vertical-align:top; }
+  th { background:#eef3fb; font-weight:600; }
+  .callout { border-radius:9px; padding:13px 17px; margin:16px 0; font-size:14.5px; }
+  .callout.warn { background:var(--warn-bg); border-left:4px solid var(--warn-br); }
+  .callout.note { background:#eaf2ff; border-left:4px solid var(--accent); }
+  ul { margin:10px 0; padding-left:22px; } li { margin:4px 0; }
+  .mermaid { background:var(--card); border:1px solid var(--line); border-radius:11px; padding:18px;
+             margin:16px 0; text-align:center; }
+  .foot { color:var(--muted); font-size:12.5px; margin-top:40px; border-top:1px solid var(--line); padding-top:12px; }
+  .script { background:var(--card); border:1px solid var(--line); border-radius:9px; padding:13px 16px; margin:12px 0; font-size:14px; }
+  .script .turn { margin:6px 0; } .script .coach { color:var(--accent); font-weight:700; } .script .you { color:var(--accent2); font-weight:700; }
+  .script .stage { color:var(--muted); font-style:italic; }
+</style>
+</head>
+<body>
+
+<h1>LC Coach Kit — System Manual</h1>
+<p class="sub">An AI-coached LeetCode prep system: a voice coach for the thinking + the <code>lc</code> CLI for habit-aware review and honest logging.</p>
+
+<nav>
+  <a href="#overview">Overview</a><a href="#install">Install</a><a href="#workflow">Workflow</a>
+  <a href="#modes">Modes</a><a href="#commands">Commands</a><a href="#files">Files</a>
+  <a href="#safety">Safety</a><a href="#architecture">Architecture</a><a href="#trouble">Troubleshooting</a>
+</nav>
+
+<h2 id="overview">1 · Overview</h2>
+<p>Two tools, one loop:</p>
+<ul>
+  <li><strong>The voice coach</strong> — a Claude app chat with <code>voice-coach-brief.md</code> uploaded, run in voice mode. Coaches your <em>thinking</em> (approach, complexity, edge cases). Does not write your code.</li>
+  <li><strong>The <code>lc</code> CLI</strong> — a tiny local tool: a second, habit-aware code review and structured logging into your <code>logs/</code> files.</li>
+</ul>
+<p>Talking problems through aloud builds interview fluency; the review + honest logging keep you from fooling yourself, because verbal fluency hides real bugs.</p>
+
+<h2 id="install">2 · Install</h2>
+<p>Prereqs: <strong>Python 3.10+</strong>, <strong>git</strong>, an <strong>Anthropic API key</strong> (<a href="https://console.anthropic.com">console.anthropic.com</a>). Nothing else.</p>
+<table>
+  <tr><th>OS</th><th>Install Python + git</th></tr>
+  <tr><td>macOS</td><td><code>brew install python git</code></td></tr>
+  <tr><td>Linux (Debian/Ubuntu)</td><td><code>sudo apt install python3 python3-venv git make</code></td></tr>
+  <tr><td>Linux (Fedora)</td><td><code>sudo dnf install python3 git make</code></td></tr>
+  <tr><td>Windows</td><td><code>winget install Python.Python.3.12 Git.Git</code></td></tr>
+</table>
+
+<h3>macOS / Linux</h3>
+<pre class="block">git clone https://github.com/william-burks/lc-coach-kit.git
+cd lc-coach-kit
+make install                       <span class="c"># venv + deps (or: python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt)</span>
+export ANTHROPIC_API_KEY=sk-...     <span class="c"># add to ~/.zshrc (or ~/.bashrc) to persist</span>
+make setup &amp;&amp; make status</pre>
+
+<h3>Windows (PowerShell)</h3>
+<pre class="block">git clone https://github.com/william-burks/lc-coach-kit.git
+cd lc-coach-kit
+python -m venv .venv; .venv\Scripts\Activate.ps1     <span class="c"># cmd: .venv\Scripts\activate.bat</span>
+pip install -r requirements.txt
+$env:ANTHROPIC_API_KEY = "sk-..."                    <span class="c"># persist: setx ANTHROPIC_API_KEY "sk-..."</span>
+python lc.py setup
+python lc.py status</pre>
+<p>Windows: use <code>python</code> (not <code>python3</code>); end a paste with <strong>Ctrl-Z then Enter</strong> (not Ctrl-D); <code>make</code> isn't built in (use the raw <code>python lc.py</code> commands, or run in WSL).</p>
+
+<h2 id="workflow">3 · Workflow (per session)</h2>
+<ol>
+  <li><code>lc status</code> — see what's due.</li>
+  <li><code>lc arm "&lt;problem&gt;" --mode TEACH|INTERVIEW</code> — builds a <strong>session pack</strong> (brief + problem + your history + weak-spots) and starts the timer. Upload the pack to your Claude voice session.</li>
+  <li>Run the session <strong>aloud</strong> with the voice coach. Write your code in a bare editor.</li>
+  <li><code>lc review</code> — paste your code for a habit-aware second opinion. Loop (revise → re-review) until clean.</li>
+  <li><code>lc log</code> — paste your session report; it updates your logs (timer auto-stops).</li>
+  <li>Weekly: <code>lc gap</code> — aggregate trends + next focus.</li>
+</ol>
+
+<h2 id="modes">4 · The two modes</h2>
+<p><strong>TEACH</strong> — learning/stuck. Complexity warm-up quiz first, problem shown, Socratic nudges toward the insight.</p>
+<div class="script">
+  <div class="turn"><span class="coach">Coach:</span> Warm-up: <code>std::sort</code> is what time/space? … N² + N log N dominates to? … Now: two-sum on a <em>sorted</em> array — state the job.</div>
+  <div class="turn"><span class="you">You:</span> Two numbers summing to target… a hash map?</div>
+  <div class="turn"><span class="coach">Coach:</span> It's <em>sorted</em> — does that unlock something simpler? <span class="stage">(nudges, never tells)</span></div>
+</div>
+<p><strong>INTERVIEW</strong> — performing. Verbal delivery, restate-cap of 2, you stay blind, self-example → pseudocode → code, coach silent + probes only.</p>
+<div class="script">
+  <div class="turn"><span class="coach">Coach:</span> <span class="stage">[reads the problem aloud once]</span> You may ask me to restate it twice.</div>
+  <div class="turn"><span class="you">You:</span> <span class="stage">[invent an example, trace it, pseudocode aloud, then code]</span></div>
+  <div class="turn"><span class="coach">Coach:</span> Are you sure that handles all-duplicates? <span class="stage">(probes — doesn't fix)</span></div>
+</div>
+
+<h2 id="commands">5 · Command reference</h2>
+<table>
+  <tr><th>Command</th><th>What it does</th><th>API?</th></tr>
+  <tr><td><code>lc setup</code></td><td>Capture name + language (or pair) → writes <code>config.md</code></td><td>no</td></tr>
+  <tr><td><code>lc arm "&lt;problem&gt;" [--mode] [--file] [--paste]</code></td><td>Build a session pack; start the timer. Problem source: coach-supplied (default), <code>--paste</code>, or <code>--file</code></td><td>no</td></tr>
+  <tr><td><code>lc start [problem]</code> / <code>lc stop</code></td><td>Manual timer control (arm/log do it automatically)</td><td>no</td></tr>
+  <tr><td><code>lc review [--problem] [--file]</code></td><td>Habit-aware code review vs your tracked weak-spots. Read-only.</td><td>yes</td></tr>
+  <tr><td><code>lc log [--file]</code></td><td>Extract a session report → diff → write to logs (asks <code>[y/N]</code> first)</td><td>yes</td></tr>
+  <tr><td><code>lc status</code></td><td>Spaced-rep due today/overdue + flagged weak areas</td><td>no</td></tr>
+  <tr><td><code>lc gap</code></td><td>Aggregate trend analysis across sessions → next focus → appends gap-log</td><td>yes</td></tr>
+</table>
+<p>Make wrappers (macOS/Linux): <code>make install / setup / status / review / log / arm P="…" M=… / gap / docs / clean</code>.</p>
+
+<h2 id="files">6 · The files</h2>
+<p>No database — markdown files are the store. <strong>The weak-areas file is the engine</strong>: every repeated mistake goes there; at 3+ strikes it's a flagged pattern and next week targets it.</p>
+<table>
+  <tr><th>File</th><th>Role</th></tr>
+  <tr><td><code>voice-coach-brief.md</code></td><td>The brief you upload to the voice coach (fill the <code>[YOUR WEAK SPOTS]</code> placeholder)</td></tr>
+  <tr><td><code>logs/problem-tracker.md</code></td><td>Checklist — tick on a clean cold solve</td></tr>
+  <tr><td><code>logs/spaced-rep-queue.md</code></td><td>+14d / +30d re-attempt schedule</td></tr>
+  <tr><td><code>logs/weak-areas.md</code></td><td>Your recurring mistakes — the engine</td></tr>
+  <tr><td><code>logs/habits.md</code></td><td>Optional daily tracking</td></tr>
+  <tr><td><code>config.md</code> · <code>gap-analysis-log.md</code> · <code>.session</code></td><td>Generated at runtime (gitignored)</td></tr>
+</table>
+
+<h2 id="safety">7 · Safety &amp; trust</h2>
+<ul>
+  <li><strong>Open source</strong> — ~400 readable lines, no hidden behavior.</li>
+  <li><strong>The AI never executes anything</strong> — it returns text only; this code does the writes. No <code>eval</code>, no shell-out.</li>
+  <li><strong>File access is hard-scoped</strong> — refuses any path outside the LC folder.</li>
+  <li><strong>You approve every write</strong> — <code>log</code> shows a diff before saving; <code>review</code> never writes.</li>
+  <li><strong>Your key is env-only</strong> — read from <code>ANTHROPIC_API_KEY</code>, never written to a file. No telemetry, no third-party servers.</li>
+</ul>
+
+<h2 id="architecture">8 · Architecture</h2>
+<pre class="mermaid">
+flowchart TB
+    User([You])
+    Claude[[Anthropic Claude API]]
+    subgraph APP["lc CLI - local, scoped, BYO key"]
+        Cmd{lc command}
+        Review["review"]
+        Log["log"]
+        Other["setup / arm / status / gap / timer"]
+        FS["file store (scoped)"]
+        LLM["Claude client"]
+    end
+    subgraph KIT["LC kit files - the only files it touches"]
+        F["brief + logs/*"]
+    end
+    User -->|paste code / report| Cmd
+    Cmd --> Review
+    Cmd --> Log
+    Cmd --> Other
+    Review -->|code + weak-areas| LLM
+    Log -->|report + logs| LLM
+    Other --> FS
+    LLM <-->|API call| Claude
+    Review -->|prints review| User
+    Log -->|diff then write| FS
+    FS <-->|read / append| KIT
+</pre>
+<p>Deeper design (components, data flow, build notes) is in <code>APP-SYSTEM-DESIGN.html</code>.</p>
+
+<h2 id="trouble">9 · Troubleshooting</h2>
+<table>
+  <tr><th>Symptom</th><th>Fix</th></tr>
+  <tr><td><code>Set ANTHROPIC_API_KEY…</code></td><td>Export your key in the same shell: <code>export ANTHROPIC_API_KEY=sk-...</code> (PowerShell: <code>$env:ANTHROPIC_API_KEY="sk-..."</code>). Add it to your shell profile to persist.</td></tr>
+  <tr><td><code>Missing dependency… pip install anthropic</code></td><td>Activate the venv and <code>pip install -r requirements.txt</code> (or <code>make install</code>).</td></tr>
+  <tr><td><code>externally-managed-environment</code> (macOS pip)</td><td>Use the venv (<code>python3 -m venv .venv &amp;&amp; source .venv/bin/activate</code>), or <code>make install</code>.</td></tr>
+  <tr><td>Model not found / 404</td><td>Set a current model: <code>export LC_MODEL=claude-haiku-4-5-20251001</code> (or another you have access to).</td></tr>
+  <tr><td>A paste prompt seems to hang</td><td>Finish the paste with <strong>Ctrl-D</strong> (Windows: <strong>Ctrl-Z then Enter</strong>).</td></tr>
+  <tr><td><code>lc: command not found</code></td><td>It's <code>python lc.py …</code>, not a global <code>lc</code> binary. Or use the <code>make</code> targets.</td></tr>
+</table>
+
+<p class="foot">LC Coach Kit — system manual. Open this anytime with <code>make docs</code>. Source: github.com/william-burks/lc-coach-kit · MIT.</p>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+</script>
+</body>
+</html>
