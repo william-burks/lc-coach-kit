@@ -5,7 +5,7 @@ A reusable system for coaching LeetCode prep with an AI voice partner + honest l
 ## How it works — a voice coach + the `lc` CLI
 
 - **The voice coach** — a Claude app chat with `voice-coach-brief.md` uploaded, run in **voice mode**. Coaches your *thinking* (approach, complexity, edge cases), then reviews your code *with the context of your spoken reasoning*. It does **not** write your code.
-- **The `lc` companion CLI** — a tiny local tool that gives a second, *habit-aware* opinion on the code and **logs your session** into the `logs/` files. Its full design is in [`APP-SYSTEM-DESIGN.md`](APP-SYSTEM-DESIGN.md) — build it (≈a weekend), or run the review/log steps by hand until you do.
+- **The `lc` companion CLI** (`lc.py`) — a tiny local tool that gives a second, *habit-aware* opinion on the code (`lc review`) and **logs your session** into the `logs/` files (`lc log`). ~400 lines, one dependency, your own API key. Design + safety model in [`APP-SYSTEM-DESIGN.md`](APP-SYSTEM-DESIGN.md).
 
 Talking problems through aloud builds interview fluency (the skill that sinks quiet coders); the code review + honest logging keep you from fooling yourself, because verbal fluency hides real bugs.
 
@@ -16,12 +16,26 @@ lc-coach-kit/
 ├── README.md                   ← you are here
 ├── voice-coach-brief.md        ← paste this into a Claude voice session
 ├── session-report-template.md  ← the end-of-session report format
+├── lc.py                       ← the companion CLI (review + logging)
+├── requirements.txt            ← one dependency: anthropic
+├── APP-SYSTEM-DESIGN.md/.html  ← how the CLI works + its safety model
 └── logs/
     ├── problem-tracker.md       ← check off problems as you clean-solve them
     ├── spaced-rep-queue.md      ← +14d / +30d re-attempt schedule
-    ├── weak-areas.md            ← your recurring mistakes (the engine — see below)
+    ├── weak-areas.md            ← your recurring mistakes (the engine)
     └── habits.md                ← optional daily tracking
 ```
+
+## Install the `lc` CLI
+
+```bash
+pip install -r requirements.txt        # one dep: anthropic
+export ANTHROPIC_API_KEY=sk-...         # your own key
+python lc.py setup                      # name + language(s)
+python lc.py status                     # verify it reads your files
+```
+
+The CLI reads/writes **only inside this folder** and **never runs AI output as code** — the model returns text, this code does the writes, and `lc log` shows a diff before saving. Full safety model in [`APP-SYSTEM-DESIGN.md`](APP-SYSTEM-DESIGN.md).
 
 ## Workflow — the exact steps
 

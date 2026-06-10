@@ -1,6 +1,6 @@
 # LC Coach Companion — System Design (MVP)
 
-A small, local CLI that handles the **second half** of the [LC Coach Kit](README.md) loop: a **habit-aware code review** + **session logging** into the kit's `logs/` files — fully automated, nothing else to wire up.
+A small, local CLI that handles the **second half** of the [LC Coach Kit](README.md) loop: a **habit-aware code review** + **session logging** into the kit's `logs/` files — fully automated, nothing else to wire up. **Implemented as [`lc.py`](lc.py) in this repo** (~400 lines, one dependency).
 
 > **Scope discipline (read first):** this is a *contained weekend build*, not a platform. It's a **build** — ship a small MVP, time-boxed, then stop. The non-goals are load-bearing.
 
