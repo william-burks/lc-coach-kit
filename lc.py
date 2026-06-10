@@ -235,7 +235,8 @@ def cmd_status(args):
     print("\n".join(due) if due else "  (none)")
     print("\nFlagged weak areas:")
     flags = [l for l in weak.splitlines()
-             if "FLAGGED" in l.upper() and l.lstrip().startswith("|")]
+             if "FLAGGED" in l.upper() and l.lstrip().startswith("|")
+             and "e.g." not in l.lower()]
     if flags:
         for l in flags:
             cells = [c.strip() for c in l.strip().strip("|").split("|")]
