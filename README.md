@@ -87,9 +87,9 @@ Your **API key is read from the environment, never written to a file** — set i
 2. **Arm the coach.** Run `lc arm "<problem>"` — it writes `session-pack.md` (the brief + your problem, prior attempts, a curated warm-up, and weak-spots, all assembled for you). Upload that file to the chat. Mode is set automatically from your spaced-rep history; `--mode` only overrides.
 3. **Let Claude respond in text first**, and read it. *Don't* immediately jump to voice — let it process the pack. (Uploading then instantly hitting stop + "I uploaded a doc" is the wrong way.)
 4. **Activate voice mode** in that same chat.
-5. **Respond via voice** — pick your problem + mode, then run the whole session aloud. Complete the mode (TEACH or INTERVIEW).
+5. **Run the session aloud.** The pack already carries your problem and the stamped mode (TEACH or INTERVIEW) — just start. Drive the whole arc: approach → your own example → pseudocode → complexity → edge cases → code.
 6. **Paste your code into that same chat.** The coach already has the context of your spoken reasoning, so its review is informed.
-7. **(Recommended) Also run `lc review`** for a second, *habit-aware* opinion on the code — checked against your tracked weak-spots.
+7. **(Recommended) Also run `lc review`** for a second, *habit-aware* opinion vs your tracked weak-spots. In **INTERVIEW** mode use both checkpoints: `lc review --stage pseudocode` before you write code, then `lc review --stage code` after.
 8. **Debrief** — discuss, diagnose, and generate the session report ([`session-report-template.md`](session-report-template.md)).
 9. **Run `lc log`** to record the session into your `logs/` files, and set the next-attempt date in [`logs/spaced-rep-queue.md`](logs/spaced-rep-queue.md).
 
