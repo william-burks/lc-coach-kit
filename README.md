@@ -26,13 +26,23 @@ lc-coach-kit/
     └── habits.md                ← optional daily tracking
 ```
 
+## Prerequisites
+
+The whole list — nothing exotic (no Node, Docker, or database):
+
+- **Python 3.10+** and **git**. On a fresh Mac: `brew install python git`
+- An **Anthropic API key** — from [console.anthropic.com](https://console.anthropic.com)
+
 ## Install the `lc` CLI
 
 ```bash
-pip install -r requirements.txt        # one dep: anthropic
-export ANTHROPIC_API_KEY=sk-...         # your own key — add to ~/.zshrc to persist
-python lc.py setup                      # name + language(s) (does NOT store your key)
-python lc.py status                     # verify it reads your files
+git clone https://github.com/william-burks/lc-coach-kit.git
+cd lc-coach-kit
+python3 -m venv .venv && source .venv/bin/activate   # isolated; avoids system-pip issues
+pip install -r requirements.txt                      # one dependency: anthropic
+export ANTHROPIC_API_KEY=sk-...                       # add to ~/.zshrc to persist
+python lc.py setup                                   # name + language(s) — does NOT store your key
+python lc.py status                                  # verify it reads your files
 ```
 
 Your **API key is read from the environment, never written to a file** — set it once in your shell profile (`~/.zshrc` / `~/.bashrc`). The CLI reads/writes **only inside this folder** and **never runs AI output as code** — the model returns text, this code does the writes, and `lc log` shows a diff before saving. Full safety model in [`APP-SYSTEM-DESIGN.md`](APP-SYSTEM-DESIGN.md).

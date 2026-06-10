@@ -222,6 +222,8 @@ def cmd_status(args):
     print(f"LC Coach — status ({lc_dir().name})\n")
     due = []
     for l in queue.splitlines():
+        if "e.g." in l.lower():
+            continue
         if l.lstrip().startswith("|") and re.search(r"\d{4}-\d{2}-\d{2}", l):
             cells = [c.strip() for c in l.strip().strip("|").split("|")]
             dates = re.findall(r"\d{4}-\d{2}-\d{2}", l)
