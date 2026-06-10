@@ -488,6 +488,11 @@ def cmd_log(args):
     t = stop_timer()
     if t and not data.get("time_min"):
         data["time_min"] = t[1]
+    if str(data.get("effort")) not in ("1", "2", "3"):
+        raw = input("Effort (1=low / 2=normal / 3=pushed past resistance, "
+                    "blank=skip): ").strip()
+        if raw in ("1", "2", "3"):
+            data["effort"] = raw
     date = data.get("date") or today()
     updates = _build_updates(data, date)
     _diff(updates)
