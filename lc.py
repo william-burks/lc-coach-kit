@@ -442,6 +442,14 @@ def cmd_review(args):
     print("\n" + ask(system, user, max_tokens=900))
 
 
+# A failed gate is a weak-spot: auto-logged so it feeds the warm-up + review.
+GATE_FAILS = {
+    "complexity_correct": "complexity-analysis",
+    "job_first": "job-first (jump-to-code)",
+    "includes_ok": "missing-include",
+}
+
+
 def _build_updates(d, date):
     prob = str(d.get("problem", "")).strip()
     outcome = str(d.get("outcome", "")).strip()
@@ -457,6 +465,10 @@ def _build_updates(d, date):
     for ws in d.get("weak_spots", []) or []:
         updates.append(("weak", KIT["weak"],
                          "| Tag", f"| {ws} | 1 | {date} | review | logged from session |"))
+    for field, tag in GATE_FAILS.items():
+        if d.get(field) is False:
+            updates.append(("weak", KIT["weak"],
+                            "| Tag", f"| {tag} | 1 | {date} | review | gate miss (auto) |"))
     if outcome == "clean-solo":
         num = prob.split()[0] if prob.split() else ""
         updates.append(("tracker-tick", KIT["tracker"], num, ""))
@@ -481,7 +493,12 @@ def cmd_log(args):
         "Return ONLY a JSON object with keys: problem (e.g. '11 Container'), "
         "outcome (one of clean-solo|with-assist|partial|failed), "
         "time_min (number or null), effort (1|2|3 or null), "
-        "complexity_correct (true|false|null), weak_spots (array of short strings), "
+        "complexity_correct (true|false|null), "
+        "job_first (true|false|null — stated the job in plain English before "
+        "reaching for a tool), "
+        "includes_ok (true|false|null — imports/includes correct and complete), "
+        "restatements (number or null — times the problem was restated, INTERVIEW), "
+        "weak_spots (array of short strings), "
         "date (YYYY-MM-DD or null), habit_note (short string)."
     )
     data = parse_json(ask(system, "Report:\n" + report, max_tokens=600))
