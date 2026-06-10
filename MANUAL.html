@@ -87,7 +87,7 @@ python lc.py status</pre>
 <h2 id="workflow">3 · Workflow (per session)</h2>
 <ol>
   <li><code>lc status</code> — see what's due.</li>
-  <li><code>lc arm "&lt;problem&gt;" --mode TEACH|INTERVIEW</code> — builds a <strong>session pack</strong> (brief + problem + your history + weak-spots) and starts the timer. Upload the pack to your Claude voice session.</li>
+  <li><code>lc arm "&lt;problem&gt;" --mode TEACH|INTERVIEW</code> — builds a <strong>session pack</strong> (brief + problem + your history + a curated warm-up drawn from your gaps + weak-spots) and starts the timer. Upload the pack to your Claude voice session.</li>
   <li>Run the session <strong>aloud</strong> with the voice coach. Write your code in a bare editor.</li>
   <li><code>lc review</code> — paste your code for a habit-aware second opinion. Loop (revise → re-review) until clean.</li>
   <li><code>lc log</code> — paste your session report; it updates your logs (timer auto-stops).</li>
@@ -95,9 +95,9 @@ python lc.py status</pre>
 </ol>
 
 <h2 id="modes">4 · The two modes</h2>
-<p><strong>TEACH</strong> — learning/stuck. Complexity warm-up quiz first, problem shown, Socratic nudges toward the insight.</p>
+<p><strong>TEACH</strong> — learning/stuck. Complexity warm-up quiz first (curated from your tracked gaps), problem shown, Socratic nudges toward the insight.</p>
 <div class="script">
-  <div class="turn"><span class="coach">Coach:</span> Warm-up: <code>std::sort</code> is what time/space? … N² + N log N dominates to? … Now: two-sum on a <em>sorted</em> array — state the job.</div>
+  <div class="turn"><span class="coach">Coach:</span> Warm-up, from your tracked gaps: two-pointer dedup — where does the skip go? … N² + N log N dominates to? … Now: two-sum on a <em>sorted</em> array — state the job.</div>
   <div class="turn"><span class="you">You:</span> Two numbers summing to target… a hash map?</div>
   <div class="turn"><span class="coach">Coach:</span> It's <em>sorted</em> — does that unlock something simpler? <span class="stage">(nudges, never tells)</span></div>
 </div>

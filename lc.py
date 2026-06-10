@@ -13,6 +13,7 @@ import datetime
 import json
 import os
 import pathlib
+import random
 import re
 import sys
 
@@ -175,6 +176,42 @@ def cmd_setup(args):
         print("  export ANTHROPIC_API_KEY=sk-...      # add to ~/.zshrc to persist")
 
 
+def _real_weak_tags():
+    """(tag, fix-note) pairs from weak-areas.md, excluding example/header/empty
+    rows. These are the user's actual tracked gaps — the curation source."""
+    tags = []
+    for line in read(KIT["weak"]).splitlines():
+        if not line.lstrip().startswith("|") or "e.g." in line.lower():
+            continue
+        if set(line.strip()) <= set("|-: "):  # separator row
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        tag = cells[0] if cells else ""
+        if not tag or tag in ("Tag", "Week"):  # header / wrong table
+            continue
+        tags.append((tag, cells[4] if len(cells) >= 5 else ""))
+    return tags
+
+
+def curated_warmup(mode, k=2):
+    """Markdown for the curated warm-up: up to k random tracked gaps turned into
+    recall prompts. Empty in INTERVIEW mode (warming up the answer contaminates
+    the retention test) or when there's no user data yet."""
+    if mode != "TEACH":
+        return ("### Warm-up quiz\n(INTERVIEW mode — no warm-up; a primed answer "
+                "contaminates the retention test.)\n")
+    tags = _real_weak_tags()
+    if not tags:
+        return ("### Warm-up quiz\n(No tracked gaps yet — skip the curated warm-up; "
+                "ask a couple of general complexity-recall questions instead.)\n")
+    picks = random.sample(tags, min(k, len(tags)))
+    lines = ["### Warm-up quiz — curated from my tracked gaps (TEACH only)",
+             "Pose a fast recall question on each of these BEFORE I read the problem:"]
+    for i, (tag, fix) in enumerate(picks, 1):
+        lines.append(f"{i}. **{tag}**" + (f" — target: {fix}" if fix else ""))
+    return "\n".join(lines) + "\n"
+
+
 def cmd_arm(args):
     problem = args.problem
     mode = (args.mode or "TEACH").upper()
@@ -199,6 +236,7 @@ def cmd_arm(args):
         f"- Problem: **{problem}**\n- Mode: **{mode}**\n- Problem source: {src}\n\n"
         f"### Problem statement\n{statement}\n\n"
         f"### Your prior attempts on this problem\n{history}\n\n"
+        f"{curated_warmup(mode)}\n"
         f"### Watch these weak-spots\n{read(KIT['weak'])}\n"
     )
     write(KIT["pack"], pack)

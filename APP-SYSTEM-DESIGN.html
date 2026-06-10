@@ -297,11 +297,11 @@ Apply these 4 changes? [y/N]: y
 <h3>The two modes in voice — TEACH vs INTERVIEW</h3>
 <p>The CLI touchpoints are identical; what changes is how the <em>voice coach</em> behaves. You set it with <code>lc arm "&lt;problem&gt;" --mode TEACH|INTERVIEW</code>.</p>
 
-<p><strong>TEACH</strong> — learning or stuck. Warm-up quiz first, problem shown, Socratic nudges toward the insight:</p>
+<p><strong>TEACH</strong> — learning or stuck. Warm-up quiz first (curated from your tracked gaps), problem shown, Socratic nudges toward the insight:</p>
 <div class="script">
-  <div class="turn"><span class="who coach">Coach:</span> Quick warm-up before we read it — <code>std::sort</code> is what time and space?</div>
-  <div class="turn"><span class="who you">You:</span> O(N log N) time, O(log N) auxiliary.</div>
-  <div class="turn"><span class="who coach">Coach:</span> Good. And N² + N log N dominates to…?</div>
+  <div class="turn"><span class="who coach">Coach:</span> Quick warm-up before we read it — from your tracked gaps: on a two-pointer dedup, where does the skip-duplicates step go?</div>
+  <div class="turn"><span class="who you">You:</span> After recording the result, advance past equal neighbors on both pointers.</div>
+  <div class="turn"><span class="who coach">Coach:</span> Good. And generally, N² + N log N dominates to…?</div>
   <div class="turn"><span class="who you">You:</span> O(N²).</div>
   <div class="turn"><span class="who coach">Coach:</span> Right. Problem: two-sum on a <em>sorted</em> array. State the job in plain English first.</div>
   <div class="turn"><span class="who you">You:</span> Find two numbers that add to target… I'll use a hash map?</div>

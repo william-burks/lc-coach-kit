@@ -80,7 +80,8 @@ lc setup
 # ARM the voice coach with a problem → outputs a "session pack" to upload
 lc arm "11 Container With Most Water"
    --mode INTERVIEW           # coach delivers it verbally; you stay blind
-   # session pack = brief + problem statement + your prior attempts + weak-spots
+   # session pack = brief + problem statement + your prior attempts
+   #              + a curated warm-up (2 random tracked gaps; TEACH only) + weak-spots
    # upload THAT to the Claude voice session (not the bare brief)
 
 # TIMER — auto-started by `arm`, auto-stopped by `log` (explicit control if needed)
@@ -145,7 +146,7 @@ sequenceDiagram
 ```
 
 ### The two modes
-- **TEACH** — learning/stuck. Complexity warm-up quiz first, problem shown, Socratic nudges *toward* the insight (coach helps you get there).
+- **TEACH** — learning/stuck. Complexity warm-up quiz first (curated from your tracked gaps), problem shown, Socratic nudges *toward* the insight (coach helps you get there).
 - **INTERVIEW** — performing. Verbal delivery, restate-cap of 2, you stay blind, self-example → pseudocode → code, coach silent + probes only ("sure that handles X?"), no help. Debrief catches the bugs.
 
 ## 6. Data model
