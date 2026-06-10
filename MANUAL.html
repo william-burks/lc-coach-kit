@@ -52,7 +52,7 @@
 <h2 id="overview">1 · Overview</h2>
 <p>Two tools, one loop:</p>
 <ul>
-  <li><strong>The voice coach</strong> — a Claude app chat with <code>voice-coach-brief.md</code> uploaded, run in voice mode. Coaches your <em>thinking</em> (approach, complexity, edge cases). Does not write your code.</li>
+  <li><strong>The voice coach</strong> — a Claude app chat with the <code>lc arm</code> session pack uploaded, run in voice mode. Coaches your <em>thinking</em> (approach, complexity, edge cases). Does not write your code.</li>
   <li><strong>The <code>lc</code> CLI</strong> — a tiny local tool: a second, habit-aware code review and structured logging into your <code>logs/</code> files.</li>
 </ul>
 <p>Talking problems through aloud builds interview fluency; the review + honest logging keep you from fooling yourself, because verbal fluency hides real bugs.</p>
@@ -125,7 +125,7 @@ python lc.py status</pre>
 <p>No database — markdown files are the store. <strong>The weak-areas file is the engine</strong>: every repeated mistake goes there; at 3+ strikes it's a flagged pattern and next week targets it.</p>
 <table>
   <tr><th>File</th><th>Role</th></tr>
-  <tr><td><code>voice-coach-brief.md</code></td><td>The brief you upload to the voice coach (fill the <code>[YOUR WEAK SPOTS]</code> placeholder)</td></tr>
+  <tr><td><code>voice-coach-brief.md</code></td><td>The standing brief that <code>lc arm</code> wraps into the session pack (weak-spots injected from <code>logs/weak-areas.md</code>)</td></tr>
   <tr><td><code>logs/problem-tracker.md</code></td><td>Checklist — tick on a clean cold solve</td></tr>
   <tr><td><code>logs/spaced-rep-queue.md</code></td><td>+14d / +30d re-attempt schedule</td></tr>
   <tr><td><code>logs/weak-areas.md</code></td><td>Your recurring mistakes — the engine</td></tr>

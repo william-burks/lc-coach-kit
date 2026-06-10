@@ -4,7 +4,7 @@ A reusable system for coaching LeetCode prep with an AI voice partner + honest l
 
 ## How it works — a voice coach + the `lc` CLI
 
-- **The voice coach** — a Claude app chat with `voice-coach-brief.md` uploaded, run in **voice mode**. Coaches your *thinking* (approach, complexity, edge cases), then reviews your code *with the context of your spoken reasoning*. It does **not** write your code.
+- **The voice coach** — a Claude app chat with the `lc arm` session pack uploaded, run in **voice mode**. Coaches your *thinking* (approach, complexity, edge cases), then reviews your code *with the context of your spoken reasoning*. It does **not** write your code.
 - **The `lc` companion CLI** (`lc.py`) — a tiny local tool that gives a second, *habit-aware* opinion on the code (`lc review`) and **logs your session** into the `logs/` files (`lc log`). ~400 lines, one dependency, your own API key. Design + safety model in [`APP-SYSTEM-DESIGN.md`](APP-SYSTEM-DESIGN.md).
 
 Talking problems through aloud builds interview fluency (the skill that sinks quiet coders); the code review + honest logging keep you from fooling yourself, because verbal fluency hides real bugs.
@@ -14,7 +14,7 @@ Talking problems through aloud builds interview fluency (the skill that sinks qu
 ```
 lc-coach-kit/
 ├── README.md                   ← you are here
-├── voice-coach-brief.md        ← paste this into a Claude voice session
+├── voice-coach-brief.md        ← the standing brief that `lc arm` wraps
 ├── session-report-template.md  ← the end-of-session report format
 ├── lc.py                       ← the companion CLI (review + logging)
 ├── Makefile                    ← make install / setup / status / review / ...
@@ -84,8 +84,8 @@ Your **API key is read from the environment, never written to a file** — set i
 ## Workflow — the exact steps
 
 1. **Open a Claude chat** (the voice-capable app).
-2. **Upload the prompt.** Best path: run `lc arm "<problem>"` and upload the generated `session-pack.md` — it wraps the brief with your problem, history, warm-up, and weak-spots (auto-filled from `logs/weak-areas.md`, nothing to fill by hand). No CLI? Upload [`voice-coach-brief.md`](voice-coach-brief.md) directly and fill its weak-spots section first.
-3. **Let Claude respond in text first**, and read it. *Don't* immediately jump to voice — let it process the brief. (Uploading then instantly hitting stop + "I uploaded a doc" is the wrong way.)
+2. **Arm the coach.** Run `lc arm "<problem>"` — it writes `session-pack.md` (the brief + your problem, prior attempts, a curated warm-up, and weak-spots, all assembled for you). Upload that file to the chat. Mode is set automatically from your spaced-rep history; `--mode` only overrides.
+3. **Let Claude respond in text first**, and read it. *Don't* immediately jump to voice — let it process the pack. (Uploading then instantly hitting stop + "I uploaded a doc" is the wrong way.)
 4. **Activate voice mode** in that same chat.
 5. **Respond via voice** — pick your problem + mode, then run the whole session aloud. Complete the mode (TEACH or INTERVIEW).
 6. **Paste your code into that same chat.** The coach already has the context of your spoken reasoning, so its review is informed.
