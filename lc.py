@@ -31,6 +31,12 @@ KIT = {
     "pack": "session-pack.md",
 }
 
+# Bundled problem sets, selectable at setup → seed logs/problem-tracker.md.
+SETS = {
+    "1": ("NeetCode 150", "sets/neetcode150.md"),
+    "2": ("Blind 75", "sets/blind75.md"),
+}
+
 
 # ---------- scoped file store ----------
 
@@ -159,18 +165,51 @@ def tick_tracker(text, problem_num, date):
 
 # ---------- commands ----------
 
+def _seed_set(rel, name):
+    src = read(rel)
+    if not src.strip():
+        print(f"  (couldn't find {rel}; left tracker unchanged)")
+        return False
+    write(KIT["tracker"], src)
+    print(f"  Seeded {KIT['tracker']} with {name} ({src.count('- [ ]')} problems).")
+    return True
+
+
+def _configure_set():
+    """Pick a bundled set and seed the tracker. Returns the set name (or None).
+    Guards against clobbering a tracker that already has clean solves."""
+    print("\nProblem set:  [1] NeetCode 150 (default)   [2] Blind 75   [3] skip")
+    choice = input("Choose [1]: ").strip() or "1"
+    if choice not in SETS:
+        return None
+    name, rel = SETS[choice]
+    has_solves = any(l.lstrip().startswith("- [x]")
+                     for l in read(KIT["tracker"]).splitlines())
+    if has_solves:
+        if input(f"  {KIT['tracker']} has clean solves — overwrite with {name}? "
+                 "[y/N]: ").strip().lower() != "y":
+            print("  Kept your existing tracker.")
+            return name
+    _seed_set(rel, name)
+    return name
+
+
 def cmd_setup(args):
     print("LC Coach setup\n")
     name = input("Your name (optional): ").strip()
     lang = input("Primary language [C++]: ").strip() or "C++"
     lang2 = input("Diagnostic 2nd language (optional, e.g. Python): ").strip()
+    set_name = _configure_set()
     lines = ["# LC Coach config\n\n", f"- name: {name}\n",
              f"- primary language: {lang}\n"]
     if lang2:
         lines.append(f"- diagnostic language: {lang2}\n")
+    if set_name:
+        lines.append(f"- problem set: {set_name}\n")
     write(KIT["config"], "".join(lines))
     extra = f" (+ {lang2} diagnostic)" if lang2 else ""
-    print(f"\nWrote {KIT['config']}. Language: {lang}{extra}")
+    tail = f"; set: {set_name}" if set_name else ""
+    print(f"\nWrote {KIT['config']}. Language: {lang}{extra}{tail}")
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print("\nYour API key is read from the environment (never stored here).")
         print("  export ANTHROPIC_API_KEY=sk-...      # add to ~/.zshrc to persist")

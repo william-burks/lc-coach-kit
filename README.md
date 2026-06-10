@@ -21,8 +21,11 @@ lc-coach-kit/
 ├── requirements.txt            ← one dependency: anthropic
 ├── MANUAL.html                 ← the full system manual (open with `make docs`)
 ├── APP-SYSTEM-DESIGN.md/.html  ← deeper architecture + safety model
+├── sets/                       ← bundled problem sets — pick one at setup
+│   ├── neetcode150.md           ← NeetCode 150
+│   └── blind75.md               ← Blind 75
 └── logs/
-    ├── problem-tracker.md       ← check off problems as you clean-solve them
+    ├── problem-tracker.md       ← check off problems as you clean-solve them (seeded at setup)
     ├── spaced-rep-queue.md      ← +14d / +30d re-attempt schedule
     ├── weak-areas.md            ← your recurring mistakes (the engine)
     └── habits.md                ← optional daily tracking
@@ -47,7 +50,7 @@ cd lc-coach-kit
 python3 -m venv .venv && source .venv/bin/activate   # isolated; avoids system-pip issues
 pip install -r requirements.txt                      # one dependency: anthropic
 export ANTHROPIC_API_KEY=sk-...                       # add to ~/.zshrc (or ~/.bashrc) to persist
-python lc.py setup                                   # name + language(s) — does NOT store your key
+python lc.py setup                                   # name + language(s) + problem set — does NOT store your key
 python lc.py status                                  # verify it reads your files
 ```
 

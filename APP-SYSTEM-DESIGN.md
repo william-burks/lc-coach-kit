@@ -121,7 +121,7 @@ sequenceDiagram
     participant V as Voice Coach (Claude app)
     participant C as Companion CLI (lc)
     participant F as Kit files
-    Note over M,F: one-time setup — clone, API key, lc setup (name + language)
+    Note over M,F: one-time setup — clone, API key, lc setup (name + language + problem set)
     M->>C: lc status
     C->>F: read queue + weak-areas
     C-->>M: due today: 11 Container (INTERVIEW)
@@ -156,7 +156,8 @@ No database — the **markdown files are the store**:
 - `spaced-rep-queue.md` — active queue (appended on log; read for status)
 - `problem-tracker.md` — checkboxes (ticked on a clean solve)
 - `habits.md` — daily rows (appended on log)
-- `config.md` — name + language(s) from `setup`
+- `config.md` — name + language(s) + chosen problem set from `setup`
+- `sets/{neetcode150,blind75}.md` — bundled problem sets; `setup` copies the chosen one into `problem-tracker.md`
 - `gap-analysis-log.md` — dated aggregate-review entries (appended by `gap`)
 - `problems/<id>.md` — *optional* personal problem statements (read by `arm`; never committed)
 - `.session` — timer state (set by `start`/`arm`, cleared by `stop`/`log`)
@@ -171,7 +172,7 @@ No database — the **markdown files are the store**:
 git clone <repo>/lc-coach-kit && cd lc-coach-kit
 pip install anthropic
 export ANTHROPIC_API_KEY=sk-...        # your own key
-python lc.py setup                     # name + language(s) → writes config
+python lc.py setup                     # name + language(s) + problem set → writes config, seeds tracker
 python lc.py status                    # verify it reads your files
 ```
 
