@@ -16,6 +16,7 @@ Key win:        __
 
 Whiteboard:     solid __ | needed prompting __
 Job-first:      clean / partial / inverted — phrase I used: __
+Pseudocode plan: wrote-it-first / jumped-to-code
 Includes pass:  clean / missed — headers I forgot: __
 Complexity call: clean / partial / wrong — what I said: __
 Restatements:   __ (INTERVIEW only; cap is 2)

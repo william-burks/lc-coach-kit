@@ -441,6 +441,14 @@ PSEUDOCODE_SYSTEM = (
     "implementation. Be concise. Do NOT write code or pseudocode for them. End "
     "with a one-line verdict: plan-sound / plan-needs-work."
 )
+DIAGNOSTIC_SYSTEM = (
+    "You are reviewing a {lang2} reimplementation of a solution the user first "
+    "wrote in their primary language — a DIAGNOSTIC of understanding, not a style "
+    "check. Verify it implements the SAME algorithm (not a different approach), and "
+    "flag anything that reveals a gap in their grasp of the algorithm itself (vs. "
+    "mere {lang2} syntax). Be concise. End with a verdict: understanding-solid / "
+    "gap-found."
+)
 CODE_SYSTEM = (
     "You are a habit-aware code reviewer for LeetCode interview practice. "
     "Review the code for correctness, bugs, language standards (includes/"
@@ -465,6 +473,17 @@ def cmd_review(args):
                 f"Pseudocode:\n{text}")
         print("\n" + ask(PSEUDOCODE_SYSTEM, user, max_tokens=700))
         return
+    if stage == "diagnostic":
+        lang2 = cfg.get("diagnostic language")
+        if not lang2:
+            raise SystemExit("No diagnostic language set — run `lc setup` to add one.")
+        text = read_input(args, f"Paste your {lang2} reimplementation")
+        if not text.strip():
+            raise SystemExit("No code provided.")
+        user = (f"Problem: {args.problem or 'unspecified'}\n\n"
+                f"Reimplementation:\n{text}")
+        print("\n" + ask(DIAGNOSTIC_SYSTEM.format(lang2=lang2), user, max_tokens=700))
+        return
     code = read_input(args, "Paste your code")
     if not code.strip():
         raise SystemExit("No code provided.")
@@ -480,6 +499,7 @@ GATE_FAILS = {
     "complexity_correct": "complexity-analysis",
     "job_first": "job-first (jump-to-code)",
     "includes_ok": "missing-include",
+    "pseudocode_first": "skipped-pseudocode-plan",
 }
 
 
@@ -593,6 +613,8 @@ def cmd_log(args):
         "job_first (true|false|null — stated the job in plain English before "
         "reaching for a tool), "
         "includes_ok (true|false|null — imports/includes correct and complete), "
+        "pseudocode_first (true|false|null — wrote a real language-agnostic plan "
+        "before any code), "
         "restatements (number or null — times the problem was restated, INTERVIEW), "
         "weak_spots (array of short strings), "
         "date (YYYY-MM-DD or null), habit_note (short string)."
@@ -654,8 +676,10 @@ def main():
     sub.add_parser("stop", help="stop the session timer")
     r = sub.add_parser("review", help="habit-aware review (pseudocode or code)")
     r.add_argument("--problem")
-    r.add_argument("--stage", choices=["pseudocode", "code"], default="code",
-                   help="pseudocode = plan check (INTERVIEW step 4); code = default")
+    r.add_argument("--stage", choices=["pseudocode", "code", "diagnostic"],
+                   default="code",
+                   help="pseudocode = plan check; code = default; "
+                        "diagnostic = reimplementation in your 2nd language")
     r.add_argument("--file", help="read the input from a file instead of pasting")
     lg = sub.add_parser("log", help="log a session report into logs/")
     lg.add_argument("--file", help="read the report from a file instead of pasting")
