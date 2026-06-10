@@ -83,15 +83,17 @@ Your **API key is read from the environment, never written to a file** — set i
 
 ## Workflow — the exact steps
 
-1. **Open a Claude chat** (the voice-capable app).
-2. **Arm the coach.** Run `lc arm "<problem>"` — it writes `session-pack.md` (the brief + your problem, prior attempts, a curated warm-up, and weak-spots, all assembled for you). Upload that file to the chat. Mode is set automatically from your spaced-rep history; `--mode` only overrides.
-3. **Let Claude respond in text first**, and read it. *Don't* immediately jump to voice — let it process the pack. (Uploading then instantly hitting stop + "I uploaded a doc" is the wrong way.)
-4. **Activate voice mode** in that same chat.
-5. **Run the session aloud.** The pack already carries your problem and the stamped mode (TEACH or INTERVIEW) — just start. Drive the whole arc: approach → your own example → pseudocode → complexity → edge cases → code.
-6. **Paste your code into that same chat.** The coach already has the context of your spoken reasoning, so its review is informed.
-7. **(Recommended) Also run `lc review`** for a second, *habit-aware* opinion vs your tracked weak-spots. In **INTERVIEW** mode use both checkpoints: `lc review --stage pseudocode` before you write code, then `lc review --stage code` after.
-8. **Debrief** — discuss, diagnose, and generate the session report ([`session-report-template.md`](session-report-template.md)).
-9. **Run `lc log`** to record the session into your `logs/` files, and set the next-attempt date in [`logs/spaced-rep-queue.md`](logs/spaced-rep-queue.md).
+Each step is tagged with where it happens: **[Terminal]** (the `lc` CLI) or **[Claude app]** (the voice chat).
+
+1. **[Claude app]** — open a chat in the voice-capable Claude app.
+2. **[Terminal]** — run `lc arm "<problem>"`. It writes `session-pack.md` (the brief + your problem, prior attempts, a curated warm-up, and weak-spots, all assembled for you). Mode is set automatically from your spaced-rep history; `--mode` only overrides.
+3. **[Claude app]** — upload `session-pack.md`. Let Claude respond in **text** first and read it — *don't* jump straight to voice. (Uploading then instantly hitting stop + "I uploaded a doc" is the wrong way.)
+4. **[Claude app]** — activate voice mode in that same chat.
+5. **[Claude app — voice]** — run the session aloud. Problem and mode are already set, so just start. Drive the whole arc: approach → your own example → pseudocode → complexity → edge cases → code.
+6. **[Claude app]** — paste your code into the voice chat for a review informed by your spoken reasoning.
+7. **[Terminal]** — also run `lc review` (paste the code) for a second, habit-aware opinion vs your tracked weak-spots. *(INTERVIEW mode splits the review in two: `lc review --stage pseudocode` mid-session before you write code, then `lc review --stage code` after.)*
+8. **[Claude app]** — debrief with the coach, then ask it to generate the **session report** in the [`session-report-template.md`](session-report-template.md) format. Copy that report.
+9. **[Terminal]** — run `lc log` and paste the report when prompted. It diffs, then (on `y`) writes to your `logs/`, schedules the next attempt in [`logs/spaced-rep-queue.md`](logs/spaced-rep-queue.md), and updates the mastery ledger.
 
 ## The two modes
 
