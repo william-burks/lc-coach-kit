@@ -27,6 +27,7 @@ KIT = {
     "habits": "logs/habits.md",
     "config": "config.md",
     "gaplog": "gap-analysis-log.md",
+    "mastery": "logs/mastery.md",
     "session": ".session",
     "pack": "session-pack.md",
 }
@@ -410,6 +411,15 @@ def cmd_status(args):
         print("  (re-attempts already fill your weekly floor)")
     else:
         print("  (none — all solved, or run `lc setup` to seed a set)")
+    mast = _parse_mastery()
+    if mast:
+        levels = [v["level"] for v in mast.values()]
+        print(f"\nMastery: {levels.count('MASTERED')} mastered · "
+              f"{levels.count('LEARNING')} learning · "
+              f"{levels.count('SHAKY')} shaky")
+        shaky = [p for p, v in mast.items() if v["level"] == "SHAKY"]
+        for p in shaky[:5]:
+            print(f"  ▲ {p}")
     print("\nFlagged weak areas:")
     flags = [l for l in weak.splitlines()
              if "FLAGGED" in l.upper() and l.lstrip().startswith("|")
@@ -450,11 +460,69 @@ GATE_FAILS = {
 }
 
 
-def _build_updates(d, date):
+def _parse_mastery():
+    """problem -> {reps, clean, ivclean, cx, level} from logs/mastery.md."""
+    out = {}
+    for l in read(KIT["mastery"]).splitlines():
+        if not l.lstrip().startswith("|") or "Problem" in l:
+            continue
+        if set(l.strip()) <= set("|-: "):
+            continue
+        cells = [c.strip() for c in l.strip().strip("|").split("|")]
+        if len(cells) >= 6 and cells[0]:
+            try:
+                out[cells[0]] = {"reps": int(cells[1]), "clean": int(cells[2]),
+                                 "ivclean": int(cells[3]), "cx": cells[4],
+                                 "level": cells[5]}
+            except ValueError:
+                continue
+    return out
+
+
+def _mastery_after(data):
+    """Project (problem, old_level, new_counters) after this session — computed
+    purely from logged facts (outcome, mode, complexity), not any verbal grade."""
+    prob = str(data.get("problem", "")).strip()
+    if not prob:
+        return None
+    m = _parse_mastery().get(prob, {"reps": 0, "clean": 0, "ivclean": 0,
+                                    "cx": "—", "level": "—"})
+    outcome = str(data.get("outcome", "")).strip()
+    mode = str(data.get("mode", "")).upper()
+    cx_field = data.get("complexity_correct")
+    reps = m["reps"] + 1
+    clean = m["clean"] + (1 if outcome == "clean-solo" else 0)
+    ivclean = m["ivclean"] + (1 if outcome == "clean-solo"
+                              and mode == "INTERVIEW" else 0)
+    if outcome in ("partial", "failed", "forgot"):
+        level = "SHAKY"
+    elif clean == 0:
+        level = "SHAKY"
+    elif clean >= 2 and ivclean >= 1 and cx_field is True:
+        level = "MASTERED"
+    else:
+        level = "LEARNING"
+    cx = "✓" if cx_field is True else ("✗" if cx_field is False else m["cx"])
+    return prob, m["level"], {"reps": reps, "clean": clean, "ivclean": ivclean,
+                              "cx": cx, "level": level}
+
+
+def _save_mastery(prob, c, date):
+    row = (f"| {prob} | {c['reps']} | {c['clean']} | {c['ivclean']} | "
+           f"{c['cx']} | {c['level']} | {date} |")
+    text = read(KIT["mastery"])
+    pat = re.compile(rf"^\| {re.escape(prob)} \|.*$", re.MULTILINE)
+    if pat.search(text):
+        write(KIT["mastery"], pat.sub(row, text, count=1))
+    else:
+        write(KIT["mastery"], insert_table_row(text, "| Problem", row))
+
+
+def _build_updates(d, date, interval=14):
     prob = str(d.get("problem", "")).strip()
     outcome = str(d.get("outcome", "")).strip()
     updates = []
-    due = _plus_days(date, 14)
+    due = _plus_days(date, interval)
     qrow = (f"| {prob} | {date} | {due} | {outcome}"
             + (f" (~{d['time_min']}m)" if d.get("time_min") else "") + " |")
     updates.append(("queue", KIT["queue"], "First solved", qrow))
@@ -475,13 +543,17 @@ def _build_updates(d, date):
     return updates
 
 
-def _diff(updates):
+def _diff(updates, mastery=None):
     print("\n── Proposed log updates ──────────────────────")
     for kind, path, _, row in updates:
         if kind == "tracker-tick":
             print(f"{path}:\n  ~ tick problem {row or _}  → [x] (clean solve)")
         else:
             print(f"{path}:\n  + {row}")
+    if mastery:
+        prob, old, c = mastery
+        print(f"{KIT['mastery']}:\n  ~ {prob}: {old} → {c['level']} "
+              f"(reps {c['reps']}, clean {c['clean']}, iv-clean {c['ivclean']})")
 
 
 def cmd_log(args):
@@ -492,6 +564,7 @@ def cmd_log(args):
         "Extract structured logging data from this LeetCode session report. "
         "Return ONLY a JSON object with keys: problem (e.g. '11 Container'), "
         "outcome (one of clean-solo|with-assist|partial|failed), "
+        "mode (TEACH|INTERVIEW or null), "
         "time_min (number or null), effort (1|2|3 or null), "
         "complexity_correct (true|false|null), "
         "job_first (true|false|null — stated the job in plain English before "
@@ -511,8 +584,10 @@ def cmd_log(args):
         if raw in ("1", "2", "3"):
             data["effort"] = raw
     date = data.get("date") or today()
-    updates = _build_updates(data, date)
-    _diff(updates)
+    mastery = _mastery_after(data)
+    interval = 30 if mastery and mastery[2]["level"] == "MASTERED" else 14
+    updates = _build_updates(data, date, interval)
+    _diff(updates, mastery)
     if input("\nApply these changes? [y/N]: ").strip().lower() != "y":
         print("Aborted — nothing written.")
         return
@@ -521,6 +596,8 @@ def cmd_log(args):
             write(path, tick_tracker(read(path), row or anchor, date))
         else:
             write(path, insert_table_row(read(path), anchor, row))
+    if mastery:
+        _save_mastery(mastery[0], mastery[2], date)
     print("Logged.")
 
 
