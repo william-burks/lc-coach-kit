@@ -50,7 +50,7 @@ cd lc-coach-kit
 python3 -m venv .venv && source .venv/bin/activate   # isolated; avoids system-pip issues
 pip install -r requirements.txt                      # one dependency: anthropic
 export ANTHROPIC_API_KEY=sk-...                       # add to ~/.zshrc (or ~/.bashrc) to persist
-python lc.py setup                                   # name + language(s) + problem set — does NOT store your key
+python lc.py setup                                   # name + language(s) + problem set + weekly floor — does NOT store your key
 python lc.py status                                  # verify it reads your files
 ```
 

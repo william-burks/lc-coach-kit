@@ -111,12 +111,12 @@ python lc.py status</pre>
 <h2 id="commands">5 · Command reference</h2>
 <table>
   <tr><th>Command</th><th>What it does</th><th>API?</th></tr>
-  <tr><td><code>lc setup</code></td><td>Capture name + language (or pair) + pick a problem set (NeetCode 150 / Blind 75) → writes <code>config.md</code>, seeds <code>logs/problem-tracker.md</code></td><td>no</td></tr>
+  <tr><td><code>lc setup</code></td><td>Capture name + language (or pair) + pick a problem set (NeetCode 150 / Blind 75) + weekly floor (5–12) → writes <code>config.md</code>, seeds <code>logs/problem-tracker.md</code></td><td>no</td></tr>
   <tr><td><code>lc arm "&lt;problem&gt;" [--mode] [--file] [--paste]</code></td><td>Build a session pack; start the timer. Problem source: coach-supplied (default), <code>--paste</code>, or <code>--file</code></td><td>no</td></tr>
   <tr><td><code>lc start [problem]</code> / <code>lc stop</code></td><td>Manual timer control (arm/log do it automatically)</td><td>no</td></tr>
   <tr><td><code>lc review [--problem] [--file]</code></td><td>Habit-aware code review vs your tracked weak-spots. Read-only.</td><td>yes</td></tr>
   <tr><td><code>lc log [--file]</code></td><td>Extract a session report → diff → write to logs (asks <code>[y/N]</code> first)</td><td>yes</td></tr>
-  <tr><td><code>lc status</code></td><td>Spaced-rep due today/overdue + flagged weak areas</td><td>no</td></tr>
+  <tr><td><code>lc status</code></td><td>Weekly floor budget (re-attempts due → new to pull) + spaced-rep due/overdue + "Up next" backlog + flagged weak areas</td><td>no</td></tr>
   <tr><td><code>lc gap</code></td><td>Aggregate trend analysis across sessions → next focus → appends gap-log</td><td>yes</td></tr>
 </table>
 <p>Make wrappers (macOS/Linux): <code>make install / setup / status / review / log / arm P="…" M=… / gap / docs / clean</code>.</p>

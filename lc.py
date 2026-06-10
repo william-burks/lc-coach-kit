@@ -194,22 +194,41 @@ def _configure_set():
     return name
 
 
+FLOOR_MIN, FLOOR_MAX, FLOOR_DEFAULT = 5, 12, 5
+
+
+def _clamp_floor(value, default=FLOOR_DEFAULT):
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        n = default
+    return max(FLOOR_MIN, min(FLOOR_MAX, n))
+
+
+def _ask_floor():
+    raw = input(f"\nWeekly floor — LC problems/week "
+                f"({FLOOR_MIN}–{FLOOR_MAX}) [{FLOOR_DEFAULT}]: ").strip()
+    return _clamp_floor(raw) if raw else FLOOR_DEFAULT
+
+
 def cmd_setup(args):
     print("LC Coach setup\n")
     name = input("Your name (optional): ").strip()
     lang = input("Primary language [C++]: ").strip() or "C++"
     lang2 = input("Diagnostic 2nd language (optional, e.g. Python): ").strip()
     set_name = _configure_set()
+    floor = _ask_floor()
     lines = ["# LC Coach config\n\n", f"- name: {name}\n",
              f"- primary language: {lang}\n"]
     if lang2:
         lines.append(f"- diagnostic language: {lang2}\n")
     if set_name:
         lines.append(f"- problem set: {set_name}\n")
+    lines.append(f"- weekly floor: {floor}\n")
     write(KIT["config"], "".join(lines))
     extra = f" (+ {lang2} diagnostic)" if lang2 else ""
     tail = f"; set: {set_name}" if set_name else ""
-    print(f"\nWrote {KIT['config']}. Language: {lang}{extra}{tail}")
+    print(f"\nWrote {KIT['config']}. Language: {lang}{extra}{tail}; floor: {floor}/wk")
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print("\nYour API key is read from the environment (never stored here).")
         print("  export ANTHROPIC_API_KEY=sk-...      # add to ~/.zshrc to persist")
@@ -295,14 +314,34 @@ def cmd_stop(args):
     print("No active timer." if not r else f"Stopped: {r[0]} — {r[1]} min")
 
 
-def _up_next(n=5):
+def _queued_keys():
+    """Problem numbers already in the spaced-rep queue (i.e. attempted at least
+    once) — excluded from 'Up next' so it lists only genuinely new problems."""
+    keys = set()
+    for l in read(KIT["queue"]).splitlines():
+        if "e.g." in l.lower():
+            continue
+        if l.lstrip().startswith("|") and re.search(r"\d{4}-\d{2}-\d{2}", l):
+            cells = [c.strip() for c in l.strip().strip("|").split("|")]
+            m = re.match(r"(\d+)", cells[0]) if cells else None
+            if m:
+                keys.add(m.group(1))
+    return keys
+
+
+def _up_next(n=5, exclude=None):
     """Next n unsolved problems from the tracker (first-attempt backlog).
     Distinct from the spaced-rep queue, which holds re-attempts of solves."""
+    exclude = exclude or set()
     items = []
     for l in read(KIT["tracker"]).splitlines():
         s = l.strip()
         if s.startswith("- [ ]") and "e.g." not in s.lower():
-            items.append(s[len("- [ ]"):].strip())
+            text = s[len("- [ ]"):].strip()
+            m = re.match(r"(\d+)", text)
+            if m and m.group(1) in exclude:
+                continue
+            items.append(text)
             if len(items) >= n:
                 break
     return items
@@ -324,13 +363,19 @@ def cmd_status(args):
                 duedate = dates[-1]
                 if duedate <= today():
                     due.append(f"  • {cells[0]:<34} due {duedate}")
-    print("Spaced-rep due/overdue:")
+    floor = _clamp_floor(cfg.get("weekly floor", FLOOR_DEFAULT))
+    new_room = max(0, floor - len(due))
+    print(f"Weekly floor: {floor}/wk · {len(due)} re-attempt(s) due · "
+          f"pull {new_room} new")
+    print("\nSpaced-rep due/overdue (do these first):")
     print("\n".join(due) if due else "  (none)")
-    nxt = _up_next()
     label = f" (from {cfg['problem set']})" if cfg.get("problem set") else ""
-    print(f"\nUp next{label}:")
+    print(f"\nUp next{label} — {new_room} to hit your floor:")
+    nxt = _up_next(new_room, _queued_keys()) if new_room else []
     if nxt:
         print("\n".join(f"  • {p}" for p in nxt))
+    elif new_room == 0:
+        print("  (re-attempts already fill your weekly floor)")
     else:
         print("  (none — all solved, or run `lc setup` to seed a set)")
     print("\nFlagged weak areas:")
