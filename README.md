@@ -17,6 +17,7 @@ lc-coach-kit/
 ├── voice-coach-brief.md        ← paste this into a Claude voice session
 ├── session-report-template.md  ← the end-of-session report format
 ├── lc.py                       ← the companion CLI (review + logging)
+├── Makefile                    ← make install / setup / status / review / ...
 ├── requirements.txt            ← one dependency: anthropic
 ├── APP-SYSTEM-DESIGN.md/.html  ← how the CLI works + its safety model
 └── logs/
@@ -43,6 +44,16 @@ pip install -r requirements.txt                      # one dependency: anthropic
 export ANTHROPIC_API_KEY=sk-...                       # add to ~/.zshrc to persist
 python lc.py setup                                   # name + language(s) — does NOT store your key
 python lc.py status                                  # verify it reads your files
+```
+
+**Or skip the venv dance with the included Makefile:**
+
+```bash
+make install                       # creates the venv + installs deps
+export ANTHROPIC_API_KEY=sk-...
+make setup && make status          # then: make review / make log / make gap
+make arm P="11 Container" M=INTERVIEW
+make help                          # all targets
 ```
 
 Your **API key is read from the environment, never written to a file** — set it once in your shell profile (`~/.zshrc` / `~/.bashrc`). The CLI reads/writes **only inside this folder** and **never runs AI output as code** — the model returns text, this code does the writes, and `lc log` shows a diff before saving. Full safety model in [`APP-SYSTEM-DESIGN.md`](APP-SYSTEM-DESIGN.md).
