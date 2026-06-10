@@ -67,6 +67,11 @@ def today():
     return datetime.date.today().isoformat()
 
 
+def _plus_days(date_str, n):
+    return (datetime.date.fromisoformat(date_str)
+            + datetime.timedelta(days=n)).isoformat()
+
+
 def now():
     return datetime.datetime.now()
 
@@ -270,9 +275,36 @@ def curated_warmup(mode, k=2):
     return "\n".join(lines) + "\n"
 
 
+def _earned_mode(problem, override):
+    """Mode is earned by spaced-rep consistency, not freely chosen: a prior rep
+    attempted on/before its due date is an INTERVIEW (retention test); a first
+    attempt or a rep slipped past due is TEACH (relearn cleanly). An explicit
+    --mode overrides, with a warning when it contradicts the earned mode."""
+    key = problem.split()[0] if problem.split() else problem
+    due = None
+    for l in read(KIT["queue"]).splitlines():
+        if "e.g." in l.lower() or not l.lstrip().startswith("|"):
+            continue
+        cells = [c.strip() for c in l.strip().strip("|").split("|")]
+        if cells and re.match(rf"{re.escape(key)}\b", cells[0]):
+            dates = re.findall(r"\d{4}-\d{2}-\d{2}", l)
+            if len(dates) >= 2:
+                due = dates[1]
+    earned = "INTERVIEW" if (due and today() <= due) else "TEACH"
+    if override:
+        ov = override.upper()
+        if ov != earned:
+            print(f"  (mode override: earned is {earned}, using {ov})")
+        return ov
+    if due:
+        rel = "on/before due" if earned == "INTERVIEW" else "past due"
+        print(f"  (mode {earned}: prior rep, {rel} {due})")
+    return earned
+
+
 def cmd_arm(args):
     problem = args.problem
-    mode = (args.mode or "TEACH").upper()
+    mode = _earned_mode(problem, args.mode)
     key = problem.split()[0] if problem.split() else problem
     queue = read(KIT["queue"])
     history = "\n".join(l for l in queue.splitlines()
@@ -414,7 +446,8 @@ def _build_updates(d, date):
     prob = str(d.get("problem", "")).strip()
     outcome = str(d.get("outcome", "")).strip()
     updates = []
-    qrow = (f"| {prob} | {date} | +14d | {outcome}"
+    due = _plus_days(date, 14)
+    qrow = (f"| {prob} | {date} | {due} | {outcome}"
             + (f" (~{d['time_min']}m)" if d.get("time_min") else "") + " |")
     updates.append(("queue", KIT["queue"], "First solved", qrow))
     eff = d.get("effort")
