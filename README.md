@@ -2,6 +2,8 @@
 
 A reusable system for coaching LeetCode prep with an AI voice partner + honest logging. Clone it, make it yours, run it every session.
 
+> **Discipline and consistency are what make this work.** Set a weekly goal and meet it, week on week — that's the whole deal. The system has no magic; it adapts to *you* only from what you actually log. Show up consistently and it learns your gaps, paces your reps, and tightens around your weak spots. Skip weeks and it has nothing to adapt to. The engine is real, but you are the input.
+
 ## How it works — a voice coach + the `lc` CLI
 
 - **The voice coach** — a Claude app chat with the `lc arm` session pack uploaded, run in **voice mode**. Coaches your *thinking* (approach, complexity, edge cases), then reviews your code *with the context of your spoken reasoning*. It does **not** write your code.
