@@ -432,24 +432,47 @@ def cmd_status(args):
         print("  (none flagged)")
 
 
+PSEUDOCODE_SYSTEM = (
+    "You are reviewing PSEUDOCODE for a LeetCode problem, BEFORE any real code is "
+    "written (the first INTERVIEW checkpoint). Check two things: (1) is it genuine "
+    "language-agnostic pseudocode — the algorithm and steps — NOT real code with "
+    "the hard parts left blank? (2) is the algorithm sound and complete: core "
+    "invariant, edge cases, target complexity? Catch a flawed plan now, before "
+    "implementation. Be concise. Do NOT write code or pseudocode for them. End "
+    "with a one-line verdict: plan-sound / plan-needs-work."
+)
+CODE_SYSTEM = (
+    "You are a habit-aware code reviewer for LeetCode interview practice. "
+    "Review the code for correctness, bugs, language standards (includes/"
+    "imports, fixed-width types where relevant), and time/space complexity — "
+    "verify the complexity independently, do not take a stated value on trust. "
+    "Cross-reference the user's tracked weak-spots below and explicitly flag "
+    "any that recur. Be concise and specific. Do NOT rewrite the code. "
+    "End with a one-line verdict: clean-solo / with-assist / partial / failed."
+)
+
+
 def cmd_review(args):
+    stage = getattr(args, "stage", None) or "code"
+    cfg = get_config()
+    if stage == "pseudocode":
+        text = read_input(args, "Paste your pseudocode")
+        if not text.strip():
+            raise SystemExit("No pseudocode provided.")
+        user = (f"Language to be used later: "
+                f"{cfg.get('primary language', 'unspecified')}\n"
+                f"Problem: {args.problem or 'unspecified'}\n\n"
+                f"Pseudocode:\n{text}")
+        print("\n" + ask(PSEUDOCODE_SYSTEM, user, max_tokens=700))
+        return
     code = read_input(args, "Paste your code")
     if not code.strip():
         raise SystemExit("No code provided.")
-    cfg = get_config()
-    system = (
-        "You are a habit-aware code reviewer for LeetCode interview practice. "
-        "Review the code for correctness, bugs, language standards (includes/"
-        "imports, fixed-width types where relevant), and time/space complexity. "
-        "Cross-reference the user's tracked weak-spots below and explicitly flag "
-        "any that recur. Be concise and specific. Do NOT rewrite the code. "
-        "End with a one-line verdict: clean-solo / with-assist / partial / failed."
-    )
     user = (f"Language: {cfg.get('primary language', 'unspecified')}\n"
             f"Problem: {args.problem or 'unspecified'}\n\n"
             f"Tracked weak-spots:\n{read(KIT['weak'])}\n\n"
             f"Code:\n{code}")
-    print("\n" + ask(system, user, max_tokens=900))
+    print("\n" + ask(CODE_SYSTEM, user, max_tokens=900))
 
 
 # A failed gate is a weak-spot: auto-logged so it feeds the warm-up + review.
@@ -629,9 +652,11 @@ def main():
     s = sub.add_parser("start", help="start the session timer")
     s.add_argument("problem", nargs="?")
     sub.add_parser("stop", help="stop the session timer")
-    r = sub.add_parser("review", help="habit-aware code review")
+    r = sub.add_parser("review", help="habit-aware review (pseudocode or code)")
     r.add_argument("--problem")
-    r.add_argument("--file", help="read code from a file instead of pasting")
+    r.add_argument("--stage", choices=["pseudocode", "code"], default="code",
+                   help="pseudocode = plan check (INTERVIEW step 4); code = default")
+    r.add_argument("--file", help="read the input from a file instead of pasting")
     lg = sub.add_parser("log", help="log a session report into logs/")
     lg.add_argument("--file", help="read the report from a file instead of pasting")
     sub.add_parser("status", help="what's due + flagged weak areas")
