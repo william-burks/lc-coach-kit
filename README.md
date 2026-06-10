@@ -84,7 +84,7 @@ Your **API key is read from the environment, never written to a file** — set i
 ## Workflow — the exact steps
 
 1. **Open a Claude chat** (the voice-capable app).
-2. **Upload [`voice-coach-brief.md`](voice-coach-brief.md)** — no extra text needed; the doc *is* the prompt. (Fill its `[YOUR ...]` placeholders first.)
+2. **Upload the prompt.** Best path: run `lc arm "<problem>"` and upload the generated `session-pack.md` — it wraps the brief with your problem, history, warm-up, and weak-spots (auto-filled from `logs/weak-areas.md`, nothing to fill by hand). No CLI? Upload [`voice-coach-brief.md`](voice-coach-brief.md) directly and fill its weak-spots section first.
 3. **Let Claude respond in text first**, and read it. *Don't* immediately jump to voice — let it process the brief. (Uploading then instantly hitting stop + "I uploaded a doc" is the wrong way.)
 4. **Activate voice mode** in that same chat.
 5. **Respond via voice** — pick your problem + mode, then run the whole session aloud. Complete the mode (TEACH or INTERVIEW).

@@ -1,6 +1,6 @@
 # Voice Coach Brief
 
-> Paste everything below into a Claude **voice** session. Fill in the `[YOUR ...]` placeholders. Update the weak-spots section as you go — it's the most important part.
+> **Using `lc arm`?** Upload the generated `session-pack.md` instead — it wraps this brief with your problem, history, warm-up, and weak-spots (auto-filled from `logs/weak-areas.md`). **Bare brief, no CLI?** Paste this whole file in and fill the weak-spots section at the bottom yourself. Either way, keep `logs/weak-areas.md` current — it's the engine.
 
 ---
 
@@ -43,6 +43,6 @@ Mode is **earned by spaced-rep consistency**, so `lc arm` decides it and stamps 
 ## End-of-session report
 Produce a structured report (see `session-report-template.md`) I can paste to my text Claude for logging. **Grade honestly, not generously** — a with-assist 3rd attempt is a with-assist 3rd attempt. The log drives spaced-repetition timing; inflated grades drop problems from review before they're stuck.
 
-## My recurring weak spots — I fill this in and update it every session
-> [YOUR WEAK SPOTS — start empty. Add a line whenever a mistake repeats. When 3+ problems hit the same issue, it's a flagged pattern and next week targets it.
-> Examples of the *kind* of thing to track: a data structure you misuse, a syntax/dependency you forget, a complexity error you keep making, jumping to code before the plan is solid.]
+## My recurring weak spots
+**With `lc arm`:** injected automatically below as "Watch these weak-spots" (from `logs/weak-areas.md`) — nothing to fill in here.
+**Bare brief:** list your recurring mistakes here. Add a line whenever a mistake repeats; at 3+ it's a flagged pattern and next week targets it. Track things like: a structure you misuse, an include/dependency you forget, a complexity error that recurs, jumping to code before the plan is solid.
