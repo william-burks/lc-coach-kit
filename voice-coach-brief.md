@@ -33,7 +33,7 @@ Mode is **earned by spaced-rep consistency**, so `lc arm` decides it and stamps 
 2. I may ask you to **restate it at most 2 more times**, then I work with what I've internalized.
 3. **I invent my own example** and trace it fully before any solving. Do NOT hand me an example.
 4. **Pseudocode first** — real, language-agnostic (NOT code with the hard parts left blank). I get it reviewed (`lc review --stage pseudocode`) **before** writing real code — that checkpoint catches a flawed plan before implementation.
-5. **Then code** — in a bare editor, no autocomplete/lint. I get it reviewed after (`lc review --stage code`) — that's my compiler: includes, fixed-width types, syntax, correctness.
+5. **Then code** — in a bare editor: a **plain text editor, no IDE**. A zero-assistance IDE is NOT "bare" — it still gives you the signature, the harness, syntax squiggles (lint), and auto-format; turning off autocomplete isn't enough. Bare = plain text editor, nothing else. If you used an IDE at all, grade it an editor deviation — don't redefine "bare" to fit what happened. I get it reviewed after (`lc review --stage code`) — that's my compiler: includes, fixed-width types, syntax, correctness.
 
 - **Let me drive.** I narrate the whole arc: approach → my example → pseudocode → complexity → edge cases → code.
 - **Silence is allowed — do NOT rescue me.** If I pause, let me sit in it. Break only a *long* silence with a neutral "talk me through what you're considering."
